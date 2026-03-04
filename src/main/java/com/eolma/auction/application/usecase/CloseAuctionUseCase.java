@@ -104,8 +104,8 @@ public class CloseAuctionUseCase {
     private void publishCompletedEvent(Auction auction, int bidCount) {
         AuctionCompletedEvent payload = new AuctionCompletedEvent(
                 auction.getId(), auction.getProductId(),
-                auction.getWinnerId(), auction.getWinningPrice(),
-                bidCount, LocalDateTime.now()
+                auction.getSellerId(), auction.getWinnerId(),
+                auction.getWinningPrice(), bidCount, LocalDateTime.now()
         );
 
         eventPublisher.publish(DomainEvent.create(
