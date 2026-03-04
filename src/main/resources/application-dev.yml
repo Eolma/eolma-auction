@@ -1,0 +1,21 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/eolma_auction
+    username: eolma
+    password: eolma-local
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+logging:
+  level:
+    root: INFO
+    com.eolma.auction: DEBUG
+    org.springframework.r2dbc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
