@@ -1,6 +1,6 @@
 package com.eolma.auction.domain.model;
 
 public enum AuctionEndType {
-    TIMED,
+    TIME,
     BID_COUNT
 }

@@ -111,8 +111,8 @@ public class Auction {
         auction.setCreatedAt(LocalDateTime.now());
         auction.setUpdatedAt(LocalDateTime.now());
 
-        if (endType == AuctionEndType.TIMED) {
-            long hours = Long.parseLong(endValue);
+        if (endType == AuctionEndType.TIME) {
+            long hours = Long.parseLong(endValue.replaceAll("[^0-9]", ""));
             auction.setEndAt(LocalDateTime.now().plusHours(hours));
         } else if (endType == AuctionEndType.BID_COUNT) {
             auction.setMaxBidCount(Integer.parseInt(endValue));
