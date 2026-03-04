@@ -44,13 +44,26 @@ public class GetAuctionUseCase {
                 );
     }
 
-    public Mono<PageResponse<AuctionListResponse>> getActiveAuctions(int page, int size) {
+    public Mono<PageResponse<AuctionListResponse>> getAuctions(String status, int page, int size) {
         long offset = (long) page * size;
 
-        return auctionRepository.findActiveAuctions(size, offset)
+        // status가 없으면 전체 조회, 있으면 해당 status로 필터링
+        if (status == null || status.isBlank()) {
+            return auctionRepository.findAllAuctions(size, offset)
+                    .map(this::toListResponse)
+                    .collectList()
+                    .zipWith(auctionRepository.count())
+                    .map(tuple -> {
+                        long total = tuple.getT2();
+                        int totalPages = (int) Math.ceil((double) total / size);
+                        return PageResponse.of(tuple.getT1(), page, size, total, totalPages);
+                    });
+        }
+
+        return auctionRepository.findByStatusPaged(status, size, offset)
                 .map(this::toListResponse)
                 .collectList()
-                .zipWith(auctionRepository.countActiveAuctions())
+                .zipWith(auctionRepository.countByStatus(status))
                 .map(tuple -> {
                     long total = tuple.getT2();
                     int totalPages = (int) Math.ceil((double) total / size);

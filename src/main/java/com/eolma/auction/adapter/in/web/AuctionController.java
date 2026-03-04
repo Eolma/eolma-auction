@@ -20,9 +20,10 @@ public class AuctionController {
 
     @GetMapping
     public Mono<PageResponse<AuctionListResponse>> getAuctions(
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return getAuctionUseCase.getActiveAuctions(page, size);
+        return getAuctionUseCase.getAuctions(status, page, size);
     }
 
     @GetMapping("/me")

@@ -21,6 +21,15 @@ public interface AuctionRepository extends ReactiveCrudRepository<Auction, Long>
     @Query("SELECT COUNT(*) FROM auction WHERE status = 'ACTIVE'")
     Mono<Long> countActiveAuctions();
 
+    @Query("SELECT * FROM auction ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findAllAuctions(int limit, long offset);
+
+    @Query("SELECT * FROM auction WHERE status = :status ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findByStatusPaged(String status, int limit, long offset);
+
+    @Query("SELECT COUNT(*) FROM auction WHERE status = :status")
+    Mono<Long> countByStatus(String status);
+
     @Query("""
             SELECT a.* FROM auction a
             INNER JOIN bid b ON a.id = b.auction_id
