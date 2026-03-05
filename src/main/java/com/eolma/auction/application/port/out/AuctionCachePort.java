@@ -21,4 +21,6 @@ public interface AuctionCachePort {
     Mono<Void> removeFromEnding(Long auctionId);
 
     Mono<Void> cleanupAuctionCache(Long auctionId);
+
+    Mono<Void> patchField(Long auctionId, String field, String value);
 }

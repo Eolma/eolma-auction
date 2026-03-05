@@ -108,6 +108,12 @@ public class AuctionRedisAdapter implements AuctionCachePort {
                 .collect(java.util.stream.Collectors.toSet());
     }
 
+    @Override
+    public Mono<Void> patchField(Long auctionId, String field, String value) {
+        String key = auctionCurrentKey(auctionId);
+        return redisTemplate.opsForHash().put(key, field, value).then();
+    }
+
     private String auctionCurrentKey(Long auctionId) {
         return "auction:" + auctionId + ":current";
     }

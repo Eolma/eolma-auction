@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -78,6 +79,20 @@ public class PlaceBidUseCase {
                                         "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0",
                                         "endAt", auction.getEndAt().toString()
                                 ));
+                    }
+                    // 기존 캐시에 endAt이 없으면 DB에서 보충
+                    if (!state.containsKey("endAt")) {
+                        return auctionService.findById(auctionId)
+                                .flatMap(auction -> {
+                                    String endAtStr = auction.getEndAt().toString();
+                                    return auctionCachePort.patchField(auctionId, "endAt", endAtStr)
+                                            .thenReturn(endAtStr);
+                                })
+                                .map(endAtStr -> {
+                                    Map<String, String> enriched = new HashMap<>(state);
+                                    enriched.put("endAt", endAtStr);
+                                    return enriched;
+                                });
                     }
                     return Mono.just(state);
                 })
