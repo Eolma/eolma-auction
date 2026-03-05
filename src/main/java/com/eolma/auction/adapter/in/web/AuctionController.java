@@ -21,9 +21,10 @@ public class AuctionController {
     @GetMapping
     public Mono<PageResponse<AuctionListResponse>> getAuctions(
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return getAuctionUseCase.getAuctions(status, page, size);
+        return getAuctionUseCase.getAuctions(status, sort, page, size);
     }
 
     @GetMapping("/me")
@@ -35,8 +36,10 @@ public class AuctionController {
     }
 
     @GetMapping("/{id}")
-    public Mono<AuctionResponse> getAuction(@PathVariable Long id) {
-        return getAuctionUseCase.getAuction(id);
+    public Mono<AuctionResponse> getAuction(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        return getAuctionUseCase.getAuction(id, userId);
     }
 
     @GetMapping("/{id}/bids")

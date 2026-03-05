@@ -5,14 +5,18 @@ public record AuctionUpdateMessage(
         Long currentPrice,
         int bidCount,
         long remainingSeconds,
-        String status
+        String status,
+        Integer viewerCount,
+        String bidderNickname
 ) {
 
-    public static AuctionUpdateMessage update(Long currentPrice, int bidCount, long remainingSeconds) {
-        return new AuctionUpdateMessage("AUCTION_UPDATE", currentPrice, bidCount, remainingSeconds, "ACTIVE");
+    public static AuctionUpdateMessage update(Long currentPrice, int bidCount, long remainingSeconds,
+                                               int viewerCount, String bidderNickname) {
+        return new AuctionUpdateMessage("AUCTION_UPDATE", currentPrice, bidCount, remainingSeconds,
+                "ACTIVE", viewerCount, bidderNickname);
     }
 
     public static AuctionUpdateMessage closed(Long winnerId, Long winningPrice, String status) {
-        return new AuctionUpdateMessage("AUCTION_CLOSED", winningPrice, 0, 0, status);
+        return new AuctionUpdateMessage("AUCTION_CLOSED", winningPrice, 0, 0, status, null, null);
     }
 }

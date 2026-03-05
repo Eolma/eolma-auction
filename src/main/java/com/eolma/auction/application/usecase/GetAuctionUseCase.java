@@ -4,8 +4,8 @@ import com.eolma.auction.adapter.in.web.dto.AuctionListResponse;
 import com.eolma.auction.adapter.in.web.dto.AuctionResponse;
 import com.eolma.auction.adapter.in.web.dto.BidHistoryResponse;
 import com.eolma.auction.application.port.out.AuctionCachePort;
+import com.eolma.auction.application.port.out.AuctionWishlistPort;
 import com.eolma.auction.domain.model.Auction;
-import com.eolma.auction.domain.model.AuctionStatus;
 import com.eolma.auction.domain.repository.AuctionRepository;
 import com.eolma.auction.domain.repository.BidRepository;
 import com.eolma.auction.domain.service.AuctionService;
@@ -24,33 +24,44 @@ public class GetAuctionUseCase {
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
     private final AuctionCachePort auctionCachePort;
+    private final AuctionWishlistPort wishlistPort;
 
     public GetAuctionUseCase(AuctionService auctionService,
                               AuctionRepository auctionRepository,
                               BidRepository bidRepository,
-                              AuctionCachePort auctionCachePort) {
+                              AuctionCachePort auctionCachePort,
+                              AuctionWishlistPort wishlistPort) {
         this.auctionService = auctionService;
         this.auctionRepository = auctionRepository;
         this.bidRepository = bidRepository;
         this.auctionCachePort = auctionCachePort;
+        this.wishlistPort = wishlistPort;
     }
 
-    public Mono<AuctionResponse> getAuction(Long auctionId) {
+    public Mono<AuctionResponse> getAuction(Long auctionId, Long userId) {
         return auctionService.findById(auctionId)
                 .flatMap(auction ->
                         auctionCachePort.getAuctionState(auctionId)
                                 .defaultIfEmpty(Map.of())
-                                .map(state -> toResponse(auction, state))
+                                .flatMap(state -> {
+                                    if (userId != null) {
+                                        return wishlistPort.existsByAuctionIdAndUserId(auctionId, userId)
+                                                .map(wishlisted -> toResponse(auction, state, wishlisted));
+                                    }
+                                    return Mono.just(toResponse(auction, state, null));
+                                })
                 );
     }
 
-    public Mono<PageResponse<AuctionListResponse>> getAuctions(String status, int page, int size) {
+    public Mono<PageResponse<AuctionListResponse>> getAuctions(String status, String sort, int page, int size) {
         long offset = (long) page * size;
+        boolean sortByBidCount = "bidCount".equals(sort);
 
-        // status가 없으면 전체 조회, 있으면 해당 status로 필터링
         if (status == null || status.isBlank()) {
-            return auctionRepository.findAllAuctions(size, offset)
-                    .map(this::toListResponse)
+            var flux = sortByBidCount
+                    ? auctionRepository.findAllAuctionsByBidCount(size, offset)
+                    : auctionRepository.findAllAuctions(size, offset);
+            return flux.concatMap(this::toListResponseWithWishlistCount)
                     .collectList()
                     .zipWith(auctionRepository.count())
                     .map(tuple -> {
@@ -61,7 +72,7 @@ public class GetAuctionUseCase {
         }
 
         return auctionRepository.findByStatusPaged(status, size, offset)
-                .map(this::toListResponse)
+                .concatMap(this::toListResponseWithWishlistCount)
                 .collectList()
                 .zipWith(auctionRepository.countByStatus(status))
                 .map(tuple -> {
@@ -75,7 +86,7 @@ public class GetAuctionUseCase {
         long offset = (long) page * size;
 
         return auctionRepository.findByBidderId(bidderId, size, offset)
-                .map(this::toListResponse)
+                .concatMap(this::toListResponseWithWishlistCount)
                 .collectList()
                 .zipWith(auctionRepository.countByBidderId(bidderId))
                 .map(tuple -> {
@@ -101,7 +112,7 @@ public class GetAuctionUseCase {
                 });
     }
 
-    private AuctionResponse toResponse(Auction auction, Map<String, String> state) {
+    private AuctionResponse toResponse(Auction auction, Map<String, String> state, Boolean isWishlisted) {
         Long currentPrice = state.containsKey("currentPrice")
                 ? Long.parseLong(state.get("currentPrice"))
                 : auction.getCurrentPrice();
@@ -121,20 +132,23 @@ public class GetAuctionUseCase {
                 currentPrice, bidCount, auction.getStatus(),
                 auction.getEndAt(), remainingSeconds,
                 auction.getWinnerId(), auction.getWinningPrice(),
-                auction.getCreatedAt()
+                auction.getCreatedAt(), isWishlisted
         );
     }
 
-    private AuctionListResponse toListResponse(Auction auction) {
+    private Mono<AuctionListResponse> toListResponseWithWishlistCount(Auction auction) {
         long remainingSeconds = 0;
         if (auction.isActive() && auction.getEndAt() != null) {
             remainingSeconds = Math.max(0, Duration.between(LocalDateTime.now(), auction.getEndAt()).getSeconds());
         }
 
-        return new AuctionListResponse(
-                auction.getId(), auction.getTitle(), auction.getCurrentPrice(),
-                auction.getBidCount(), auction.getStatus(), auction.getEndAt(),
-                remainingSeconds
-        );
+        final long rs = remainingSeconds;
+        return wishlistPort.countByAuctionId(auction.getId())
+                .defaultIfEmpty(0L)
+                .map(count -> new AuctionListResponse(
+                        auction.getId(), auction.getTitle(), auction.getCurrentPrice(),
+                        auction.getBidCount(), auction.getStatus(), auction.getEndAt(),
+                        rs, count
+                ));
     }
 }

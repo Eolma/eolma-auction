@@ -24,6 +24,9 @@ public interface AuctionRepository extends ReactiveCrudRepository<Auction, Long>
     @Query("SELECT * FROM auction ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
     Flux<Auction> findAllAuctions(int limit, long offset);
 
+    @Query("SELECT * FROM auction ORDER BY bid_count DESC, created_at DESC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findAllAuctionsByBidCount(int limit, long offset);
+
     @Query("SELECT * FROM auction WHERE status = :status ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
     Flux<Auction> findByStatusPaged(String status, int limit, long offset);
 

@@ -134,42 +134,42 @@ CREATE INDEX idx_wishlist_auction ON auction_wishlist(auction_id);
 ## Implementation Items
 
 ### Phase 1: WebSocket 메시지 확장
-- [ ] 1-1: AuctionUpdateMessage에 viewerCount, bidderNickname 필드 추가
-- [ ] 1-2: WebSocketSessionManager.broadcastAuctionUpdate 시그니처 확장
-- [ ] 1-3: UserServiceClient 생성 (eolma-user 공개 프로필 API WebClient)
-- [ ] 1-4: PlaceBidUseCase에서 닉네임 조회 후 broadcast에 전달
+- [x] 1-1: AuctionUpdateMessage에 viewerCount, bidderNickname 필드 추가
+- [x] 1-2: WebSocketSessionManager.broadcastAuctionUpdate 시그니처 확장
+- [x] 1-3: UserServiceClient 생성 (eolma-user 공개 프로필 API WebClient)
+- [x] 1-4: PlaceBidUseCase에서 닉네임 조회 후 broadcast에 전달
 
 ### Phase 2: Sort 파라미터
-- [ ] 2-1: AuctionRepository에 bidCount 정렬 쿼리 추가
-- [ ] 2-2: GetAuctionUseCase에 sort 분기 처리
-- [ ] 2-3: AuctionController에 sort 파라미터 추가
+- [x] 2-1: AuctionRepository에 bidCount 정렬 쿼리 추가
+- [x] 2-2: GetAuctionUseCase에 sort 분기 처리
+- [x] 2-3: AuctionController에 sort 파라미터 추가
 
 ### Phase 3: Wishlist 도메인 + 포트
-- [ ] 2-1: AuctionWishlist 엔티티 생성
-- [ ] 2-2: AuctionWishlistPort 아웃 포트 정의
-- [ ] 2-3: schema.sql에 auction_wishlist 테이블 DDL 추가
+- [x] 2-1: AuctionWishlist 엔티티 생성
+- [x] 2-2: AuctionWishlistPort 아웃 포트 정의
+- [x] 2-3: schema.sql에 auction_wishlist 테이블 DDL 추가
 
 ### Phase 4: Wishlist 유스케이스
-- [ ] 4-1: ToggleWishlistUseCase 구현
-- [ ] 4-2: GetWishlistUseCase 구현
+- [x] 4-1: ToggleWishlistUseCase 구현
+- [x] 4-2: GetWishlistUseCase 구현
 
 ### Phase 5: Wishlist 어댑터
-- [ ] 5-1: AuctionWishlistRepository (R2DBC) 생성
-- [ ] 5-2: AuctionWishlistR2dbcAdapter 구현
-- [ ] 5-3: AuctionWishlistController REST API 구현
+- [x] 5-1: AuctionWishlistRepository (R2DBC) 생성
+- [x] 5-2: AuctionWishlistR2dbcAdapter 구현
+- [x] 5-3: AuctionWishlistController REST API 구현
 
 ### Phase 6: 검증
-- [ ] 6-1: ./gradlew build 성공 확인
+- [x] 6-1: ./gradlew build 성공 확인
 - [ ] 6-2: 스모크 테스트 (WebSocket viewerCount/bidderNickname, Sort, Wishlist CRUD)
 
 ## Acceptance Criteria
-- [ ] AC-1: AUCTION_UPDATE 메시지에 viewerCount 필드가 포함됨
-- [ ] AC-2: AUCTION_UPDATE 메시지에 bidderNickname 필드가 포함됨
-- [ ] AC-3: GET /api/v1/auctions?sort=bidCount 호출 시 입찰 많은 순 정렬
-- [ ] AC-4: POST /api/v1/auctions/{id}/wishlist 호출 시 찜 토글 동작
-- [ ] AC-5: GET /api/v1/auctions/wishlist/me 호출 시 내 찜 목록 반환
-- [ ] AC-6: ./gradlew build 성공
-- [ ] AC-7: 기존 WebSocket 메시지의 다른 필드가 변경되지 않음
+- [x] AC-1: AUCTION_UPDATE 메시지에 viewerCount 필드가 포함됨
+- [x] AC-2: AUCTION_UPDATE 메시지에 bidderNickname 필드가 포함됨
+- [x] AC-3: GET /api/v1/auctions?sort=bidCount 호출 시 입찰 많은 순 정렬
+- [x] AC-4: POST /api/v1/auctions/{id}/wishlist 호출 시 찜 토글 동작
+- [x] AC-5: GET /api/v1/auctions/wishlist/me 호출 시 내 찜 목록 반환
+- [x] AC-6: ./gradlew build 성공
+- [x] AC-7: 기존 WebSocket 메시지의 다른 필드가 변경되지 않음
 
 ## Notes
 - viewerCount는 해당 경매의 WebSocket 연결 수이므로 실제 "조회자 수"와 다를 수 있음 (WebSocket 미연결 사용자는 카운트 안 됨)

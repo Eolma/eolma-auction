@@ -37,6 +37,17 @@ CREATE INDEX IF NOT EXISTS idx_bid_auction ON bid(auction_id);
 CREATE INDEX IF NOT EXISTS idx_bid_auction_amount ON bid(auction_id, amount DESC);
 CREATE INDEX IF NOT EXISTS idx_bid_bidder ON bid(bidder_id);
 
+CREATE TABLE IF NOT EXISTS auction_wishlist (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    auction_id  BIGINT NOT NULL REFERENCES auction(id),
+    user_id     BIGINT NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(auction_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wishlist_user ON auction_wishlist(user_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_auction ON auction_wishlist(auction_id);
+
 CREATE TABLE IF NOT EXISTS processed_event (
     event_id     VARCHAR(36) PRIMARY KEY,
     processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

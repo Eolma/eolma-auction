@@ -54,9 +54,12 @@ public class WebSocketSessionManager {
         return sessionUserMap.get(session.getId());
     }
 
-    public void broadcastAuctionUpdate(Long auctionId, Long currentPrice, int bidCount, LocalDateTime endAt) {
+    public void broadcastAuctionUpdate(Long auctionId, Long currentPrice, int bidCount,
+                                        LocalDateTime endAt, String bidderNickname) {
         long remainingSeconds = Math.max(0, Duration.between(LocalDateTime.now(), endAt).getSeconds());
-        AuctionUpdateMessage message = AuctionUpdateMessage.update(currentPrice, bidCount, remainingSeconds);
+        int viewerCount = getSubscriberCount(auctionId);
+        AuctionUpdateMessage message = AuctionUpdateMessage.update(currentPrice, bidCount, remainingSeconds,
+                viewerCount, bidderNickname);
         broadcast(auctionId, message);
     }
 

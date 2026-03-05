@@ -1,6 +1,7 @@
 package com.eolma.auction.application.usecase;
 
 import com.eolma.auction.adapter.in.websocket.WebSocketSessionManager;
+import com.eolma.auction.adapter.out.external.UserServiceClient;
 import com.eolma.auction.application.port.out.AuctionCachePort;
 import com.eolma.auction.application.port.out.DistributedLockPort;
 import com.eolma.auction.application.port.out.EventPublisher;
@@ -35,6 +36,7 @@ public class PlaceBidUseCase {
     private final EventPublisher eventPublisher;
     private final WebSocketSessionManager sessionManager;
     private final CloseAuctionUseCase closeAuctionUseCase;
+    private final UserServiceClient userServiceClient;
 
     public PlaceBidUseCase(BidValidationService bidValidationService,
                             AuctionService auctionService,
@@ -43,7 +45,8 @@ public class PlaceBidUseCase {
                             DistributedLockPort distributedLockPort,
                             EventPublisher eventPublisher,
                             WebSocketSessionManager sessionManager,
-                            CloseAuctionUseCase closeAuctionUseCase) {
+                            CloseAuctionUseCase closeAuctionUseCase,
+                            UserServiceClient userServiceClient) {
         this.bidValidationService = bidValidationService;
         this.auctionService = auctionService;
         this.bidRepository = bidRepository;
@@ -52,6 +55,7 @@ public class PlaceBidUseCase {
         this.eventPublisher = eventPublisher;
         this.sessionManager = sessionManager;
         this.closeAuctionUseCase = closeAuctionUseCase;
+        this.userServiceClient = userServiceClient;
     }
 
     public Mono<BidResult> execute(Long auctionId, Long bidderId, Long amount) {
@@ -126,17 +130,18 @@ public class PlaceBidUseCase {
                         auctionCachePort.updateBidState(auctionId, amount, bidderId, newBidCount)
                                 .then(auctionCachePort.addBidToRanking(auctionId, bidderId, amount))
                                 .then(auctionService.updateBidInfo(auctionId, amount, newBidCount))
-                                .then(Mono.fromRunnable(() -> {
+                                .then(userServiceClient.getNickname(bidderId))
+                                .flatMap(nickname -> {
                                     publishBidPlacedEvent(savedBid, auctionId, currentPrice, newBidCount);
                                     String endAtStr = state.get("endAt");
                                     LocalDateTime endAt = endAtStr != null
                                             ? LocalDateTime.parse(endAtStr)
                                             : LocalDateTime.now();
-                                    sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt);
-                                }))
-                                .then(isInstantBuy
-                                        ? closeAuctionUseCase.execute(auctionId).then()
-                                        : Mono.empty())
+                                    sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt, nickname);
+                                    return isInstantBuy
+                                            ? closeAuctionUseCase.execute(auctionId).then()
+                                            : Mono.empty();
+                                })
                                 .thenReturn(BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit))
                 );
     }

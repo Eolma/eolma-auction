@@ -18,6 +18,7 @@ public record AuctionResponse(
         long remainingSeconds,
         Long winnerId,
         Long winningPrice,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean isWishlisted
 ) {
 }

@@ -9,6 +9,7 @@ public record AuctionListResponse(
         int bidCount,
         String status,
         LocalDateTime endAt,
-        long remainingSeconds
+        long remainingSeconds,
+        Long wishlistCount
 ) {
 }
