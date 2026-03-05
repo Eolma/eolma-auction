@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,8 +54,9 @@ public class WebSocketSessionManager {
         return sessionUserMap.get(session.getId());
     }
 
-    public void broadcastAuctionUpdate(Long auctionId, Long currentPrice, int bidCount) {
-        AuctionUpdateMessage message = AuctionUpdateMessage.update(currentPrice, bidCount, 0);
+    public void broadcastAuctionUpdate(Long auctionId, Long currentPrice, int bidCount, LocalDateTime endAt) {
+        long remainingSeconds = Math.max(0, Duration.between(LocalDateTime.now(), endAt).getSeconds());
+        AuctionUpdateMessage message = AuctionUpdateMessage.update(currentPrice, bidCount, remainingSeconds);
         broadcast(auctionId, message);
     }
 

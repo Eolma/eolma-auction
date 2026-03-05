@@ -38,6 +38,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
         fields.put("sellerId", String.valueOf(sellerId));
         fields.put("minBidUnit", String.valueOf(minBidUnit));
         fields.put("instantPrice", instantPrice != null ? String.valueOf(instantPrice) : "0");
+        fields.put("endAt", endAt.toString());
 
         return redisTemplate.opsForHash().putAll(key, fields)
                 .then(redisTemplate.expire(key, CACHE_TTL))

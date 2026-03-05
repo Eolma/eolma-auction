@@ -75,7 +75,8 @@ public class PlaceBidUseCase {
                                         "sellerId", String.valueOf(auction.getSellerId()),
                                         "minBidUnit", String.valueOf(auction.getMinBidUnit()),
                                         "status", auction.getStatus(),
-                                        "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0"
+                                        "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0",
+                                        "endAt", auction.getEndAt().toString()
                                 ));
                     }
                     return Mono.just(state);
@@ -112,7 +113,11 @@ public class PlaceBidUseCase {
                                 .then(auctionService.updateBidInfo(auctionId, amount, newBidCount))
                                 .then(Mono.fromRunnable(() -> {
                                     publishBidPlacedEvent(savedBid, auctionId, currentPrice, newBidCount);
-                                    sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount);
+                                    String endAtStr = state.get("endAt");
+                                    LocalDateTime endAt = endAtStr != null
+                                            ? LocalDateTime.parse(endAtStr)
+                                            : LocalDateTime.now();
+                                    sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt);
                                 }))
                                 .then(isInstantBuy
                                         ? closeAuctionUseCase.execute(auctionId).then()
