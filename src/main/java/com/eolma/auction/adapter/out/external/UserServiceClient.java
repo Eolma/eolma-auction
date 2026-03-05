@@ -24,7 +24,7 @@ public class UserServiceClient {
                 .uri("/api/v1/members/{id}", userId)
                 .retrieve()
                 .bodyToMono(MemberResponse.class)
-                .map(MemberResponse::nickname)
+                .map(r -> r.nickname() != null ? r.nickname() : "익명")
                 .onErrorResume(e -> {
                     log.warn("Failed to fetch nickname for userId={}: {}", userId, e.getMessage());
                     return Mono.just("익명");
