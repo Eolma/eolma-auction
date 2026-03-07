@@ -131,7 +131,7 @@ public class PlaceBidUseCase {
                                 .then(auctionCachePort.addBidToRanking(auctionId, bidderId, amount))
                                 .then(auctionService.updateBidInfo(auctionId, amount, newBidCount))
                                 .then(userServiceClient.getNickname(bidderId))
-                                .flatMap(nickname -> {
+                                .map(nickname -> {
                                     publishBidPlacedEvent(savedBid, auctionId, currentPrice, newBidCount);
                                     String endAtStr = state.get("endAt");
                                     LocalDateTime endAt = endAtStr != null
@@ -139,10 +139,9 @@ public class PlaceBidUseCase {
                                             : LocalDateTime.now();
                                     sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt, nickname);
                                     return isInstantBuy
-                                            ? closeAuctionUseCase.executeWithinLock(auctionId)
-                                            : Mono.empty();
+                                            ? BidResult.successInstantBuy(savedBid.getId(), amount, newBidCount, minBidUnit)
+                                            : BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit);
                                 })
-                                .thenReturn(BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit))
                 );
     }
 

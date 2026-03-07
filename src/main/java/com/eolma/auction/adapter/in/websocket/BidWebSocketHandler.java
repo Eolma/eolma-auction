@@ -2,6 +2,7 @@ package com.eolma.auction.adapter.in.websocket;
 
 import com.eolma.auction.adapter.in.websocket.dto.BidMessage;
 import com.eolma.auction.adapter.in.websocket.dto.BidResultMessage;
+import com.eolma.auction.application.usecase.CloseAuctionUseCase;
 import com.eolma.auction.application.usecase.PlaceBidUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -22,13 +23,16 @@ public class BidWebSocketHandler implements WebSocketHandler {
     private static final UriTemplate AUCTION_URI_TEMPLATE = new UriTemplate("/ws/auction/{id}");
 
     private final PlaceBidUseCase placeBidUseCase;
+    private final CloseAuctionUseCase closeAuctionUseCase;
     private final WebSocketSessionManager sessionManager;
     private final ObjectMapper objectMapper;
 
     public BidWebSocketHandler(PlaceBidUseCase placeBidUseCase,
+                                CloseAuctionUseCase closeAuctionUseCase,
                                 WebSocketSessionManager sessionManager,
                                 ObjectMapper objectMapper) {
         this.placeBidUseCase = placeBidUseCase;
+        this.closeAuctionUseCase = closeAuctionUseCase;
         this.sessionManager = sessionManager;
         this.objectMapper = objectMapper;
     }
@@ -75,6 +79,9 @@ public class BidWebSocketHandler implements WebSocketHandler {
                                 if (result.accepted()) {
                                     sessionManager.sendToSession(session,
                                             BidResultMessage.success(result.currentPrice(), result.bidCount(), result.nextMinBid()));
+                                    if (result.instantBuy()) {
+                                        closeAuctionUseCase.execute(auctionId).subscribe();
+                                    }
                                 } else {
                                     sessionManager.sendToSession(session,
                                             BidResultMessage.failure(result.errorCode(), result.errorMessage()));
