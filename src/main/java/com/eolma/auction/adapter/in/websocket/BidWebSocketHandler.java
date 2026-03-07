@@ -2,7 +2,7 @@ package com.eolma.auction.adapter.in.websocket;
 
 import com.eolma.auction.adapter.in.websocket.dto.BidMessage;
 import com.eolma.auction.adapter.in.websocket.dto.BidResultMessage;
-import com.eolma.auction.application.usecase.CloseAuctionUseCase;
+import com.eolma.auction.application.usecase.InstantBuyUseCase;
 import com.eolma.auction.application.usecase.PlaceBidUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -23,16 +23,16 @@ public class BidWebSocketHandler implements WebSocketHandler {
     private static final UriTemplate AUCTION_URI_TEMPLATE = new UriTemplate("/ws/auction/{id}");
 
     private final PlaceBidUseCase placeBidUseCase;
-    private final CloseAuctionUseCase closeAuctionUseCase;
+    private final InstantBuyUseCase instantBuyUseCase;
     private final WebSocketSessionManager sessionManager;
     private final ObjectMapper objectMapper;
 
     public BidWebSocketHandler(PlaceBidUseCase placeBidUseCase,
-                                CloseAuctionUseCase closeAuctionUseCase,
+                                InstantBuyUseCase instantBuyUseCase,
                                 WebSocketSessionManager sessionManager,
                                 ObjectMapper objectMapper) {
         this.placeBidUseCase = placeBidUseCase;
-        this.closeAuctionUseCase = closeAuctionUseCase;
+        this.instantBuyUseCase = instantBuyUseCase;
         this.sessionManager = sessionManager;
         this.objectMapper = objectMapper;
     }
@@ -77,10 +77,11 @@ public class BidWebSocketHandler implements WebSocketHandler {
                     .subscribe(
                             result -> {
                                 if (result.accepted()) {
-                                    sessionManager.sendToSession(session,
-                                            BidResultMessage.success(result.currentPrice(), result.bidCount(), result.nextMinBid()));
                                     if (result.instantBuy()) {
-                                        closeAuctionUseCase.execute(auctionId).subscribe();
+                                        handleInstantBuyReservation(session, auctionId, userId);
+                                    } else {
+                                        sessionManager.sendToSession(session,
+                                                BidResultMessage.success(result.currentPrice(), result.bidCount(), result.nextMinBid()));
                                     }
                                 } else {
                                     sessionManager.sendToSession(session,
@@ -100,6 +101,34 @@ public class BidWebSocketHandler implements WebSocketHandler {
         }
     }
 
+    private void handleInstantBuyReservation(WebSocketSession session, Long auctionId, Long userId) {
+        instantBuyUseCase.execute(auctionId, userId)
+                .subscribe(
+                        ibResult -> {
+                            if (ibResult.accepted()) {
+                                // 선점자에게 결제 페이지로 이동하라는 메시지 전송
+                                sessionManager.sendToSession(session, Map.of(
+                                        "type", "INSTANT_BUY_RESERVED",
+                                        "auctionId", ibResult.auctionId(),
+                                        "price", ibResult.price(),
+                                        "expiresAt", ibResult.expiresAt().toString()
+                                ));
+                                // 전체 참여자에게 선점 상태 브로드캐스트
+                                sessionManager.broadcastInstantBuyStarted(
+                                        auctionId, userId, ibResult.expiresAt());
+                            } else {
+                                sessionManager.sendToSession(session,
+                                        BidResultMessage.failure(ibResult.errorCode(), ibResult.errorMessage()));
+                            }
+                        },
+                        error -> {
+                            log.error("Instant buy reservation error: auctionId={}, userId={}", auctionId, userId, error);
+                            sessionManager.sendToSession(session,
+                                    BidResultMessage.failure("INTERNAL_ERROR", "즉시구매 처리 중 오류가 발생했습니다."));
+                        }
+                );
+    }
+
     private Long extractAuctionId(WebSocketSession session) {
         URI uri = session.getHandshakeInfo().getUri();
         Map<String, String> variables = AUCTION_URI_TEMPLATE.match(uri.getPath());
@@ -113,10 +142,8 @@ public class BidWebSocketHandler implements WebSocketHandler {
     }
 
     private Long extractUserId(WebSocketSession session) {
-        // Gateway에서 JWT 검증 후 X-User-Id 헤더로 전달
         String userIdHeader = session.getHandshakeInfo().getHeaders().getFirst("X-User-Id");
         if (userIdHeader == null) {
-            // 쿼리 파라미터 fallback (테스트용)
             String query = session.getHandshakeInfo().getUri().getQuery();
             if (query != null && query.contains("userId=")) {
                 String[] params = query.split("&");

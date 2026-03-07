@@ -88,6 +88,10 @@ public class Auction {
         return AuctionStatus.ACTIVE.name().equals(status);
     }
 
+    public boolean isPendingInstantBuy() {
+        return AuctionStatus.PENDING_INSTANT_BUY.name().equals(status);
+    }
+
     public boolean hasInstantPrice() {
         return instantPrice != null && instantPrice > 0;
     }

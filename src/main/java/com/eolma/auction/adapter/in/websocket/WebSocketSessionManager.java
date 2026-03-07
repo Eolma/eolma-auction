@@ -68,6 +68,16 @@ public class WebSocketSessionManager {
         broadcast(auctionId, message);
     }
 
+    public void broadcastInstantBuyStarted(Long auctionId, Long buyerId, java.time.LocalDateTime expiresAt) {
+        AuctionUpdateMessage message = AuctionUpdateMessage.instantBuyStarted(buyerId, expiresAt.toString());
+        broadcast(auctionId, message);
+    }
+
+    public void broadcastInstantBuyCancelled(Long auctionId) {
+        AuctionUpdateMessage message = AuctionUpdateMessage.instantBuyCancelled();
+        broadcast(auctionId, message);
+    }
+
     public void sendToSession(WebSocketSession session, Object message) {
         try {
             String json = objectMapper.writeValueAsString(message);

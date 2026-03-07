@@ -63,6 +63,29 @@ public class AuctionService {
                 .doOnSuccess(a -> log.info("Auction failed: auctionId={}", auctionId));
     }
 
+    public Mono<Auction> setPendingInstantBuy(Long auctionId) {
+        return findById(auctionId)
+                .flatMap(auction -> {
+                    auction.setAuctionStatus(AuctionStatus.PENDING_INSTANT_BUY);
+                    auction.setUpdatedAt(java.time.LocalDateTime.now());
+                    return auctionRepository.save(auction);
+                })
+                .doOnSuccess(a -> log.info("Auction pending instant buy: auctionId={}", auctionId));
+    }
+
+    public Mono<Auction> restoreActive(Long auctionId) {
+        return findById(auctionId)
+                .flatMap(auction -> {
+                    if (!auction.isPendingInstantBuy()) {
+                        return Mono.just(auction);
+                    }
+                    auction.setAuctionStatus(AuctionStatus.ACTIVE);
+                    auction.setUpdatedAt(java.time.LocalDateTime.now());
+                    return auctionRepository.save(auction);
+                })
+                .doOnSuccess(a -> log.info("Auction restored to active: auctionId={}", auctionId));
+    }
+
     public Mono<Auction> updateBidInfo(Long auctionId, Long currentPrice, int bidCount) {
         return findById(auctionId)
                 .flatMap(auction -> {

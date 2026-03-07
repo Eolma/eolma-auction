@@ -15,6 +15,11 @@ public class BidValidationService {
                                Long currentPrice, Long minBidUnit, String status,
                                Long currentWinnerId) {
 
+        if (AuctionStatus.PENDING_INSTANT_BUY.name().equals(status)) {
+            log.warn("Bid rejected: instant buy in progress, status={}", status);
+            return BidResult.failure("INSTANT_BUY_IN_PROGRESS", "다른 사용자가 즉시구매를 진행 중입니다.");
+        }
+
         if (!AuctionStatus.ACTIVE.name().equals(status)) {
             log.warn("Bid rejected: auction not active, status={}", status);
             return BidResult.failure("AUCTION_CLOSED", "경매가 종료되었습니다.");

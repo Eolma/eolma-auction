@@ -119,11 +119,14 @@ public class PlaceBidUseCase {
             return Mono.just(validationResult);
         }
 
+        // 즉시구매 금액 이상이면 선점 처리로 위임 (입찰 저장 안 함)
         boolean isInstantBuy = instantPrice > 0 && amount >= instantPrice;
-        BidType bidType = isInstantBuy ? BidType.INSTANT : BidType.MANUAL;
-        int newBidCount = bidCount + 1;
+        if (isInstantBuy) {
+            return Mono.just(BidResult.successInstantBuy(null, instantPrice, bidCount, minBidUnit));
+        }
 
-        Bid bid = Bid.create(auctionId, bidderId, amount, bidType);
+        int newBidCount = bidCount + 1;
+        Bid bid = Bid.create(auctionId, bidderId, amount, BidType.MANUAL);
 
         return bidRepository.save(bid)
                 .flatMap(savedBid ->
@@ -138,9 +141,7 @@ public class PlaceBidUseCase {
                                             ? LocalDateTime.parse(endAtStr)
                                             : LocalDateTime.now();
                                     sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt, nickname);
-                                    return isInstantBuy
-                                            ? BidResult.successInstantBuy(savedBid.getId(), amount, newBidCount, minBidUnit)
-                                            : BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit);
+                                    return BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit);
                                 })
                 );
     }

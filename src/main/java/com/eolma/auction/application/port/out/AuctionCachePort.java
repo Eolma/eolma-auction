@@ -23,4 +23,10 @@ public interface AuctionCachePort {
     Mono<Void> cleanupAuctionCache(Long auctionId);
 
     Mono<Void> patchField(Long auctionId, String field, String value);
+
+    Mono<Boolean> setInstantBuyReservation(Long auctionId, Long buyerId);
+
+    Mono<Map<String, String>> getInstantBuyReservation(Long auctionId);
+
+    Mono<Void> removeInstantBuyReservation(Long auctionId);
 }

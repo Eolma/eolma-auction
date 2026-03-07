@@ -18,6 +18,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
 
     private static final Logger log = LoggerFactory.getLogger(AuctionRedisAdapter.class);
     private static final Duration CACHE_TTL = Duration.ofHours(25);
+    private static final Duration INSTANT_BUY_TTL = Duration.ofMinutes(5);
     private static final String ENDING_KEY = "auction:ending";
 
     private final ReactiveStringRedisTemplate redisTemplate;
@@ -114,11 +115,47 @@ public class AuctionRedisAdapter implements AuctionCachePort {
         return redisTemplate.opsForHash().put(key, field, value).then();
     }
 
+    @Override
+    public Mono<Boolean> setInstantBuyReservation(Long auctionId, Long buyerId) {
+        String key = instantBuyKey(auctionId);
+        Map<String, String> fields = new HashMap<>();
+        fields.put("buyerId", String.valueOf(buyerId));
+        fields.put("startedAt", LocalDateTime.now().toString());
+
+        return redisTemplate.opsForHash().putAll(key, fields)
+                .then(redisTemplate.expire(key, INSTANT_BUY_TTL))
+                .thenReturn(true)
+                .doOnSuccess(v -> log.info("Instant buy reservation set: auctionId={}, buyerId={}", auctionId, buyerId));
+    }
+
+    @Override
+    public Mono<Map<String, String>> getInstantBuyReservation(Long auctionId) {
+        String key = instantBuyKey(auctionId);
+        return redisTemplate.opsForHash().entries(key)
+                .collectMap(
+                        entry -> entry.getKey().toString(),
+                        entry -> entry.getValue().toString()
+                )
+                .defaultIfEmpty(new HashMap<>());
+    }
+
+    @Override
+    public Mono<Void> removeInstantBuyReservation(Long auctionId) {
+        String key = instantBuyKey(auctionId);
+        return redisTemplate.delete(key)
+                .then()
+                .doOnSuccess(v -> log.info("Instant buy reservation removed: auctionId={}", auctionId));
+    }
+
     private String auctionCurrentKey(Long auctionId) {
         return "auction:" + auctionId + ":current";
     }
 
     private String auctionBidsKey(Long auctionId) {
         return "auction:" + auctionId + ":bids";
+    }
+
+    private String instantBuyKey(Long auctionId) {
+        return "auction:" + auctionId + ":instant_buy";
     }
 }
