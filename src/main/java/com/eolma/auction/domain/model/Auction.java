@@ -117,6 +117,9 @@ public class Auction {
         } else if (endType == AuctionEndType.BID_COUNT) {
             auction.setMaxBidCount(Integer.parseInt(endValue));
             auction.setEndAt(LocalDateTime.now().plusDays(7));
+        } else if (endType == AuctionEndType.COMBINED) {
+            auction.setMaxBidCount(Integer.parseInt(endValue));
+            auction.setEndAt(LocalDateTime.now().plusDays(7));
         }
 
         return auction;
