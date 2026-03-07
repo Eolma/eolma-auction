@@ -45,6 +45,9 @@ public class Auction {
     @Column("end_type")
     private String endType;
 
+    @Column("duration_hours")
+    private Integer durationHours;
+
     @Column("max_bid_count")
     private Integer maxBidCount;
 
@@ -95,7 +98,8 @@ public class Auction {
 
     public static Auction create(Long productId, Long sellerId, String title,
                                   Long startingPrice, Long instantPrice, Long reservePrice,
-                                  Long minBidUnit, AuctionEndType endType, String endValue) {
+                                  Long minBidUnit, AuctionEndType endType,
+                                  Integer durationHours, Integer maxBidCount) {
         Auction auction = new Auction();
         auction.setProductId(productId);
         auction.setSellerId(sellerId);
@@ -111,15 +115,16 @@ public class Auction {
         auction.setCreatedAt(LocalDateTime.now());
         auction.setUpdatedAt(LocalDateTime.now());
 
+        auction.setDurationHours(durationHours);
+
         if (endType == AuctionEndType.TIME) {
-            long hours = Long.parseLong(endValue.replaceAll("[^0-9]", ""));
-            auction.setEndAt(LocalDateTime.now().plusHours(hours));
+            auction.setEndAt(LocalDateTime.now().plusHours(durationHours));
         } else if (endType == AuctionEndType.BID_COUNT) {
-            auction.setMaxBidCount(Integer.parseInt(endValue));
+            auction.setMaxBidCount(maxBidCount);
             auction.setEndAt(LocalDateTime.now().plusDays(7));
         } else if (endType == AuctionEndType.COMBINED) {
-            auction.setMaxBidCount(Integer.parseInt(endValue));
-            auction.setEndAt(LocalDateTime.now().plusDays(7));
+            auction.setMaxBidCount(maxBidCount);
+            auction.setEndAt(LocalDateTime.now().plusHours(durationHours));
         }
 
         return auction;

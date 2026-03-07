@@ -43,7 +43,8 @@ public class CreateAuctionUseCase {
                         event.reservePrice(),
                         event.minBidUnit(),
                         event.endType(),
-                        event.endValue()
+                        event.durationHours(),
+                        event.maxBidCount()
                 )
                 .flatMap(auction ->
                         auctionCachePort.initAuctionCache(auction.getId(), auction.getSellerId(),
@@ -64,7 +65,8 @@ public class CreateAuctionUseCase {
                 auction.getReservePrice(),
                 auction.getMinBidUnit(),
                 auction.getEndType(),
-                auction.getMaxBidCount() != null ? String.valueOf(auction.getMaxBidCount()) : null,
+                auction.getDurationHours(),
+                auction.getMaxBidCount(),
                 LocalDateTime.now()
         );
 

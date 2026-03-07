@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS auction (
     current_price   BIGINT NOT NULL,
     bid_count       INT NOT NULL DEFAULT 0,
     end_type        VARCHAR(20) NOT NULL,
+    duration_hours  INT,
     max_bid_count   INT,
     status          VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     end_at          TIMESTAMPTZ NOT NULL,
