@@ -46,14 +46,21 @@ public class CloseAuctionUseCase {
 
         return Mono.fromCallable(() -> {
             distributedLockPort.executeWithLock("lock:auction:" + auctionId, () -> {
-                closeAuctionWithLock(auctionId).block();
+                closeAuctionInternal(auctionId).block();
                 return null;
             });
             return (Void) null;
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-    private Mono<Void> closeAuctionWithLock(Long auctionId) {
+    /**
+     * 이미 락을 보유한 상태에서 호출 (PlaceBidUseCase 등)
+     */
+    public Mono<Void> executeWithinLock(Long auctionId) {
+        return closeAuctionInternal(auctionId);
+    }
+
+    private Mono<Void> closeAuctionInternal(Long auctionId) {
         return auctionCachePort.getAuctionState(auctionId)
                 .flatMap(state -> auctionService.findById(auctionId)
                         .flatMap(auction -> {

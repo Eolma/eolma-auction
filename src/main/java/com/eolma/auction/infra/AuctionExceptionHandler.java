@@ -40,7 +40,7 @@ public class AuctionExceptionHandler {
         log.error("Unexpected error", e);
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred"
+                "예기치 않은 오류가 발생했습니다."
         );
         problemDetail.setType(URI.create(ErrorType.INTERNAL_ERROR.getType()));
         problemDetail.setTitle(ErrorType.INTERNAL_ERROR.getTitle());

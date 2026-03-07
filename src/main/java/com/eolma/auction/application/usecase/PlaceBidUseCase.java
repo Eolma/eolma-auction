@@ -139,7 +139,7 @@ public class PlaceBidUseCase {
                                             : LocalDateTime.now();
                                     sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt, nickname);
                                     return isInstantBuy
-                                            ? closeAuctionUseCase.execute(auctionId).then()
+                                            ? closeAuctionUseCase.executeWithinLock(auctionId)
                                             : Mono.empty();
                                 })
                                 .thenReturn(BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit))

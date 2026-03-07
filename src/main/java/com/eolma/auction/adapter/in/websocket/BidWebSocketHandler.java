@@ -65,7 +65,7 @@ public class BidWebSocketHandler implements WebSocketHandler {
 
             if (userId == null) {
                 sessionManager.sendToSession(session,
-                        BidResultMessage.failure("UNAUTHORIZED", "Authentication required"));
+                        BidResultMessage.failure("UNAUTHORIZED", "로그인이 필요합니다."));
                 return;
             }
 
@@ -83,13 +83,13 @@ public class BidWebSocketHandler implements WebSocketHandler {
                             error -> {
                                 log.error("Bid processing error: auctionId={}, userId={}", auctionId, userId, error);
                                 sessionManager.sendToSession(session,
-                                        BidResultMessage.failure("INTERNAL_ERROR", "An unexpected error occurred"));
+                                        BidResultMessage.failure("INTERNAL_ERROR", "예기치 않은 오류가 발생했습니다."));
                             }
                     );
         } catch (Exception e) {
             log.error("Failed to parse WebSocket message: {}", payload, e);
             sessionManager.sendToSession(session,
-                    Map.of("type", "ERROR", "code", "INVALID_MESSAGE", "message", "Invalid message format"));
+                    Map.of("type", "ERROR", "code", "INVALID_MESSAGE", "message", "잘못된 메시지 형식입니다."));
         }
     }
 

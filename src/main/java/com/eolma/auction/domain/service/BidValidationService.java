@@ -17,24 +17,24 @@ public class BidValidationService {
 
         if (!AuctionStatus.ACTIVE.name().equals(status)) {
             log.warn("Bid rejected: auction not active, status={}", status);
-            return BidResult.failure("AUCTION_CLOSED", "Auction is not active");
+            return BidResult.failure("AUCTION_CLOSED", "경매가 종료되었습니다.");
         }
 
         if (bidderId.equals(sellerId)) {
             log.warn("Bid rejected: seller cannot bid on own auction, bidderId={}", bidderId);
-            return BidResult.failure("SELF_BID", "Cannot bid on your own auction");
+            return BidResult.failure("SELF_BID", "본인의 경매에는 입찰할 수 없습니다.");
         }
 
         if (bidderId.equals(currentWinnerId)) {
             log.warn("Bid rejected: already highest bidder, bidderId={}", bidderId);
-            return BidResult.failure("ALREADY_HIGHEST", "You are already the highest bidder");
+            return BidResult.failure("ALREADY_HIGHEST", "이미 최고 입찰자입니다.");
         }
 
         long requiredMinBid = currentPrice + minBidUnit;
         if (bidAmount < requiredMinBid) {
             log.warn("Bid rejected: too low, bidAmount={}, required={}", bidAmount, requiredMinBid);
             return BidResult.failure("BID_TOO_LOW",
-                    "Bid must be at least " + requiredMinBid);
+                    "최소 " + String.format("%,d", requiredMinBid) + "원 이상 입찰해야 합니다.");
         }
 
         return null;
