@@ -30,6 +30,9 @@ public class Auction {
     @Column("instant_price")
     private Long instantPrice;
 
+    @Column("instant_buy_lock_percent")
+    private Integer instantBuyLockPercent;
+
     @Column("reserve_price")
     private Long reservePrice;
 
@@ -100,8 +103,17 @@ public class Auction {
         return reservePrice != null && reservePrice > 0;
     }
 
+    public boolean isInstantBuyLocked(Long currentPrice) {
+        if (instantBuyLockPercent == null || instantBuyLockPercent <= 0 || !hasInstantPrice()) {
+            return false;
+        }
+        long threshold = (long) (instantPrice * instantBuyLockPercent / 100.0);
+        return currentPrice > threshold;
+    }
+
     public static Auction create(Long productId, String sellerId, String title,
-                                  Long startingPrice, Long instantPrice, Long reservePrice,
+                                  Long startingPrice, Long instantPrice,
+                                  Integer instantBuyLockPercent, Long reservePrice,
                                   Long minBidUnit, AuctionEndType endType,
                                   Integer durationHours, Integer maxBidCount) {
         Auction auction = new Auction();
@@ -110,6 +122,7 @@ public class Auction {
         auction.setTitle(title);
         auction.setStartingPrice(startingPrice);
         auction.setInstantPrice(instantPrice);
+        auction.setInstantBuyLockPercent(instantBuyLockPercent);
         auction.setReservePrice(reservePrice);
         auction.setMinBidUnit(minBidUnit);
         auction.setCurrentPrice(startingPrice);

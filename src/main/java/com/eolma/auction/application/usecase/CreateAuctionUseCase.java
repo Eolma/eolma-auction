@@ -40,6 +40,7 @@ public class CreateAuctionUseCase {
                         event.title(),
                         event.startingPrice(),
                         event.instantPrice(),
+                        event.instantBuyLockPercent(),
                         event.reservePrice(),
                         event.minBidUnit(),
                         event.endType(),
@@ -49,7 +50,8 @@ public class CreateAuctionUseCase {
                 .flatMap(auction ->
                         auctionCachePort.initAuctionCache(auction.getId(), auction.getSellerId(),
                                         auction.getCurrentPrice(), auction.getMinBidUnit(),
-                                        auction.getInstantPrice(), auction.getEndAt())
+                                        auction.getInstantPrice(), auction.getInstantBuyLockPercent(),
+                                        auction.getEndAt())
                                 .then(auctionCachePort.scheduleEnding(auction.getId(), auction.getEndAt()))
                                 .then(Mono.fromRunnable(() -> publishAuctionStartedEvent(auction)))
                                 .thenReturn(auction)

@@ -8,7 +8,8 @@ import java.util.Map;
 public interface AuctionCachePort {
 
     Mono<Void> initAuctionCache(Long auctionId, String sellerId, Long currentPrice,
-                                Long minBidUnit, Long instantPrice, LocalDateTime endAt);
+                                Long minBidUnit, Long instantPrice,
+                                Integer instantBuyLockPercent, LocalDateTime endAt);
 
     Mono<Map<String, String>> getAuctionState(Long auctionId);
 

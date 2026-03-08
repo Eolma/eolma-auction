@@ -64,7 +64,11 @@ public class InstantBuyUseCase {
                                 .map(auction -> Map.of(
                                         "status", auction.getStatus(),
                                         "sellerId", auction.getSellerId(),
-                                        "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0"
+                                        "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0",
+                                        "instantBuyLockPercent", auction.getInstantBuyLockPercent() != null ? String.valueOf(auction.getInstantBuyLockPercent()) : "0",
+                                        "currentPrice", String.valueOf(auction.getCurrentPrice()),
+                                        "minBidUnit", String.valueOf(auction.getMinBidUnit()),
+                                        "winnerId", auction.getWinnerId() != null ? auction.getWinnerId() : "0"
                                 ));
                     }
                     return Mono.just(state);
@@ -81,8 +85,18 @@ public class InstantBuyUseCase {
             return Mono.just(InstantBuyResult.failure("NO_INSTANT_PRICE", "즉시구매가 설정되지 않은 경매입니다."));
         }
 
-        // BidValidationService의 상태/판매자/최고입찰자 검증 재활용
+        // 즉시구매 잠금 상태 확인
+        int instantBuyLockPercent = Integer.parseInt(state.getOrDefault("instantBuyLockPercent", "0"));
         Long currentPrice = Long.parseLong(state.getOrDefault("currentPrice", "0"));
+        if (instantBuyLockPercent > 0) {
+            long threshold = (long) (instantPrice * instantBuyLockPercent / 100.0);
+            if (currentPrice > threshold) {
+                return Mono.just(InstantBuyResult.failure("INSTANT_BUY_LOCKED",
+                        "입찰가가 즉시구매가의 " + instantBuyLockPercent + "%를 초과하여 즉시구매가 잠겼습니다."));
+            }
+        }
+
+        // BidValidationService의 상태/판매자/최고입찰자 검증 재활용
         Long minBidUnit = Long.parseLong(state.getOrDefault("minBidUnit", "1000"));
         String winnerId = state.getOrDefault("winnerId", "0");
         BidResult validation = bidValidationService.validate(

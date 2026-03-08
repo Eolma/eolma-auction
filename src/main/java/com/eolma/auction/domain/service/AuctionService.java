@@ -22,12 +22,13 @@ public class AuctionService {
     }
 
     public Mono<Auction> createAuction(Long productId, String sellerId, String title,
-                                        Long startingPrice, Long instantPrice, Long reservePrice,
+                                        Long startingPrice, Long instantPrice,
+                                        Integer instantBuyLockPercent, Long reservePrice,
                                         Long minBidUnit, String endType,
                                         Integer durationHours, Integer maxBidCount) {
         AuctionEndType auctionEndType = AuctionEndType.valueOf(endType);
         Auction auction = Auction.create(productId, sellerId, title, startingPrice,
-                instantPrice, reservePrice, minBidUnit, auctionEndType,
+                instantPrice, instantBuyLockPercent, reservePrice, minBidUnit, auctionEndType,
                 durationHours, maxBidCount);
 
         return auctionRepository.save(auction)

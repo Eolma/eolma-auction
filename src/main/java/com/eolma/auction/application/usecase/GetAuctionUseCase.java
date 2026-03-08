@@ -125,9 +125,12 @@ public class GetAuctionUseCase {
             remainingSeconds = Math.max(0, Duration.between(LocalDateTime.now(), auction.getEndAt()).getSeconds());
         }
 
+        boolean instantBuyLocked = auction.isInstantBuyLocked(currentPrice);
+
         return new AuctionResponse(
                 auction.getId(), auction.getProductId(), auction.getSellerId(),
                 auction.getTitle(), auction.getStartingPrice(), auction.getInstantPrice(),
+                auction.getInstantBuyLockPercent(), instantBuyLocked,
                 auction.getReservePrice() != null, auction.getMinBidUnit(),
                 currentPrice, bidCount, auction.getStatus(),
                 auction.getEndAt(), remainingSeconds,

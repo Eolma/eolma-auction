@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS auction (
     title           VARCHAR(200) NOT NULL,
     starting_price  BIGINT NOT NULL,
     instant_price   BIGINT,
+    instant_buy_lock_percent SMALLINT,
     reserve_price   BIGINT,
     min_bid_unit    BIGINT NOT NULL DEFAULT 1000,
     current_price   BIGINT NOT NULL,

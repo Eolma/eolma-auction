@@ -29,7 +29,8 @@ public class AuctionRedisAdapter implements AuctionCachePort {
 
     @Override
     public Mono<Void> initAuctionCache(Long auctionId, String sellerId, Long currentPrice,
-                                        Long minBidUnit, Long instantPrice, LocalDateTime endAt) {
+                                        Long minBidUnit, Long instantPrice,
+                                        Integer instantBuyLockPercent, LocalDateTime endAt) {
         String key = auctionCurrentKey(auctionId);
         Map<String, String> fields = new HashMap<>();
         fields.put("currentPrice", String.valueOf(currentPrice));
@@ -39,6 +40,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
         fields.put("sellerId", sellerId);
         fields.put("minBidUnit", String.valueOf(minBidUnit));
         fields.put("instantPrice", instantPrice != null ? String.valueOf(instantPrice) : "0");
+        fields.put("instantBuyLockPercent", instantBuyLockPercent != null ? String.valueOf(instantBuyLockPercent) : "0");
         fields.put("endAt", endAt.toString());
 
         return redisTemplate.opsForHash().putAll(key, fields)

@@ -73,16 +73,19 @@ public class PlaceBidUseCase {
                 .flatMap(state -> {
                     if (state.isEmpty()) {
                         return auctionService.findById(auctionId)
-                                .map(auction -> Map.of(
-                                        "currentPrice", String.valueOf(auction.getCurrentPrice()),
-                                        "winnerId", auction.getWinnerId() != null ? auction.getWinnerId() : "0",
-                                        "bidCount", String.valueOf(auction.getBidCount()),
-                                        "sellerId", auction.getSellerId(),
-                                        "minBidUnit", String.valueOf(auction.getMinBidUnit()),
-                                        "status", auction.getStatus(),
-                                        "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0",
-                                        "endAt", auction.getEndAt().toString()
-                                ));
+                                .map(auction -> {
+                                    Map<String, String> m = new HashMap<>();
+                                    m.put("currentPrice", String.valueOf(auction.getCurrentPrice()));
+                                    m.put("winnerId", auction.getWinnerId() != null ? auction.getWinnerId() : "0");
+                                    m.put("bidCount", String.valueOf(auction.getBidCount()));
+                                    m.put("sellerId", auction.getSellerId());
+                                    m.put("minBidUnit", String.valueOf(auction.getMinBidUnit()));
+                                    m.put("status", auction.getStatus());
+                                    m.put("instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0");
+                                    m.put("instantBuyLockPercent", auction.getInstantBuyLockPercent() != null ? String.valueOf(auction.getInstantBuyLockPercent()) : "0");
+                                    m.put("endAt", auction.getEndAt().toString());
+                                    return (Map<String, String>) m;
+                                });
                     }
                     // 기존 캐시에 endAt이 없으면 DB에서 보충
                     if (!state.containsKey("endAt")) {
@@ -110,6 +113,7 @@ public class PlaceBidUseCase {
         Long minBidUnit = Long.parseLong(state.getOrDefault("minBidUnit", "1000"));
         String status = state.getOrDefault("status", "ACTIVE");
         Long instantPrice = Long.parseLong(state.getOrDefault("instantPrice", "0"));
+        int instantBuyLockPercent = Integer.parseInt(state.getOrDefault("instantBuyLockPercent", "0"));
         int bidCount = Integer.parseInt(state.getOrDefault("bidCount", "0"));
 
         BidResult validationResult = bidValidationService.validate(
@@ -120,7 +124,10 @@ public class PlaceBidUseCase {
         }
 
         // 즉시구매 금액 이상이면 선점 처리로 위임 (입찰 저장 안 함)
-        boolean isInstantBuy = instantPrice > 0 && amount >= instantPrice;
+        // 단, 잠금 임계값을 초과한 상태면 즉시구매 불가 (일반 입찰로 처리)
+        boolean isInstantBuyLocked = instantBuyLockPercent > 0 && instantPrice > 0
+                && amount > (long) (instantPrice * instantBuyLockPercent / 100.0);
+        boolean isInstantBuy = !isInstantBuyLocked && instantPrice > 0 && amount >= instantPrice;
         if (isInstantBuy) {
             return Mono.just(BidResult.successInstantBuy(null, instantPrice, bidCount, minBidUnit));
         }
@@ -141,6 +148,17 @@ public class PlaceBidUseCase {
                                             ? LocalDateTime.parse(endAtStr)
                                             : LocalDateTime.now();
                                     sessionManager.broadcastAuctionUpdate(auctionId, amount, newBidCount, endAt, nickname);
+
+                                    // 이번 입찰로 즉시구매 잠금 임계값을 최초 초과한 경우 알림
+                                    if (instantBuyLockPercent > 0 && instantPrice > 0) {
+                                        long threshold = (long) (instantPrice * instantBuyLockPercent / 100.0);
+                                        boolean wasLocked = currentPrice > threshold;
+                                        boolean nowLocked = amount > threshold;
+                                        if (!wasLocked && nowLocked) {
+                                            sessionManager.broadcastInstantBuyLocked(auctionId);
+                                        }
+                                    }
+
                                     return BidResult.success(savedBid.getId(), amount, newBidCount, minBidUnit);
                                 })
                 );

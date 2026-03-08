@@ -9,6 +9,8 @@ public record AuctionResponse(
         String title,
         Long startingPrice,
         Long instantPrice,
+        Integer instantBuyLockPercent,
+        boolean instantBuyLocked,
         boolean hasReservePrice,
         Long minBidUnit,
         Long currentPrice,

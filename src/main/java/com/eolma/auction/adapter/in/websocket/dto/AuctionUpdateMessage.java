@@ -34,4 +34,9 @@ public record AuctionUpdateMessage(
         return new AuctionUpdateMessage("INSTANT_BUY_CANCELLED", null, null, null,
                 "ACTIVE", null, null, null, null);
     }
+
+    public static AuctionUpdateMessage instantBuyLocked() {
+        return new AuctionUpdateMessage("INSTANT_BUY_LOCKED", null, null, null,
+                "ACTIVE", null, null, null, null);
+    }
 }

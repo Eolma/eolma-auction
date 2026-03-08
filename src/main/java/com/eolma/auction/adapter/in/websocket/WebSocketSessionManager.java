@@ -78,6 +78,11 @@ public class WebSocketSessionManager {
         broadcast(auctionId, message);
     }
 
+    public void broadcastInstantBuyLocked(Long auctionId) {
+        AuctionUpdateMessage message = AuctionUpdateMessage.instantBuyLocked();
+        broadcast(auctionId, message);
+    }
+
     public void sendToSession(WebSocketSession session, Object message) {
         try {
             String json = objectMapper.writeValueAsString(message);
