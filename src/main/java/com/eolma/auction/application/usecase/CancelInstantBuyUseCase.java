@@ -54,8 +54,9 @@ public class CancelInstantBuyUseCase {
         return auctionCachePort.getInstantBuyReservation(auctionId)
                 .flatMap(reservation -> {
                     if (reservation.isEmpty()) {
-                        log.debug("No active reservation to cancel: auctionId={}", auctionId);
-                        return Mono.empty();
+                        // reservation TTL 만료 후에도 DB 상태 복구 필요
+                        log.info("No active reservation, restoring auction from DB: auctionId={}", auctionId);
+                        return restoreAuction(auctionId);
                     }
                     String reservedBuyerId = reservation.get("buyerId");
                     if (userId != null && !String.valueOf(userId).equals(reservedBuyerId)) {
