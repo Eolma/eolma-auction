@@ -20,7 +20,7 @@ public class Bid {
     private Long auctionId;
 
     @Column("bidder_id")
-    private Long bidderId;
+    private String bidderId;
 
     private Long amount;
 
@@ -40,7 +40,7 @@ public class Bid {
         return BidStatus.valueOf(status);
     }
 
-    public static Bid create(Long auctionId, Long bidderId, Long amount, BidType type) {
+    public static Bid create(Long auctionId, String bidderId, Long amount, BidType type) {
         Bid bid = new Bid();
         bid.setAuctionId(auctionId);
         bid.setBidderId(bidderId);

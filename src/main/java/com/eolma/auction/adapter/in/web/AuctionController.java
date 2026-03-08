@@ -33,7 +33,7 @@ public class AuctionController {
 
     @GetMapping("/me")
     public Mono<PageResponse<AuctionListResponse>> getMyAuctions(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return getAuctionUseCase.getMyAuctions(userId, page, size);
@@ -42,7 +42,7 @@ public class AuctionController {
     @GetMapping("/{id}")
     public Mono<AuctionResponse> getAuction(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
         return getAuctionUseCase.getAuction(id, userId);
     }
 
@@ -57,7 +57,7 @@ public class AuctionController {
     @PostMapping("/{id}/instant-buy/cancel")
     public Mono<Void> cancelInstantBuy(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId) {
+            @RequestHeader("X-User-Id") String userId) {
         return cancelInstantBuyUseCase.execute(id, userId);
     }
 }

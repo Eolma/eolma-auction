@@ -20,12 +20,12 @@ public class AuctionWishlist {
     private Long auctionId;
 
     @Column("user_id")
-    private Long userId;
+    private String userId;
 
     @Column("created_at")
     private LocalDateTime createdAt;
 
-    public static AuctionWishlist create(Long auctionId, Long userId) {
+    public static AuctionWishlist create(Long auctionId, String userId) {
         AuctionWishlist wishlist = new AuctionWishlist();
         wishlist.setAuctionId(auctionId);
         wishlist.setUserId(userId);

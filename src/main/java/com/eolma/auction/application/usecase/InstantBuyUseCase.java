@@ -42,7 +42,7 @@ public class InstantBuyUseCase {
         this.bidValidationService = bidValidationService;
     }
 
-    public Mono<InstantBuyResult> execute(Long auctionId, Long buyerId) {
+    public Mono<InstantBuyResult> execute(Long auctionId, String buyerId) {
         log.info("Processing instant buy reservation: auctionId={}, buyerId={}", auctionId, buyerId);
 
         return Mono.fromCallable(() ->
@@ -52,14 +52,14 @@ public class InstantBuyUseCase {
         ).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Mono<InstantBuyResult> processInstantBuy(Long auctionId, Long buyerId) {
+    private Mono<InstantBuyResult> processInstantBuy(Long auctionId, String buyerId) {
         return auctionCachePort.getAuctionState(auctionId)
                 .flatMap(state -> {
                     if (state.isEmpty()) {
                         return auctionService.findById(auctionId)
                                 .map(auction -> Map.of(
                                         "status", auction.getStatus(),
-                                        "sellerId", String.valueOf(auction.getSellerId()),
+                                        "sellerId", auction.getSellerId(),
                                         "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0"
                                 ));
                     }
@@ -68,9 +68,9 @@ public class InstantBuyUseCase {
                 .flatMap(state -> validateAndReserve(auctionId, buyerId, state));
     }
 
-    private Mono<InstantBuyResult> validateAndReserve(Long auctionId, Long buyerId, Map<String, String> state) {
+    private Mono<InstantBuyResult> validateAndReserve(Long auctionId, String buyerId, Map<String, String> state) {
         String status = state.getOrDefault("status", "ACTIVE");
-        Long sellerId = Long.parseLong(state.getOrDefault("sellerId", "0"));
+        String sellerId = state.getOrDefault("sellerId", "");
         Long instantPrice = Long.parseLong(state.getOrDefault("instantPrice", "0"));
 
         if (instantPrice <= 0) {
@@ -80,10 +80,10 @@ public class InstantBuyUseCase {
         // BidValidationService의 상태/판매자/최고입찰자 검증 재활용
         Long currentPrice = Long.parseLong(state.getOrDefault("currentPrice", "0"));
         Long minBidUnit = Long.parseLong(state.getOrDefault("minBidUnit", "1000"));
-        Long winnerId = Long.parseLong(state.getOrDefault("winnerId", "0"));
+        String winnerId = state.getOrDefault("winnerId", "0");
         BidResult validation = bidValidationService.validate(
                 buyerId, sellerId, instantPrice, currentPrice, minBidUnit, status,
-                winnerId == 0 ? null : winnerId);
+                "0".equals(winnerId) ? null : winnerId);
         if (validation != null) {
             return Mono.just(InstantBuyResult.failure(validation.errorCode(), validation.errorMessage()));
         }
@@ -100,8 +100,8 @@ public class InstantBuyUseCase {
                 });
     }
 
-    private void publishInstantBuyStartedEvent(Long auctionId, Long productId, Long sellerId,
-                                                Long buyerId, Long price, LocalDateTime expiresAt) {
+    private void publishInstantBuyStartedEvent(Long auctionId, Long productId, String sellerId,
+                                                String buyerId, Long price, LocalDateTime expiresAt) {
         InstantBuyStartedEvent payload = new InstantBuyStartedEvent(
                 auctionId, productId, sellerId, buyerId, price, expiresAt);
 

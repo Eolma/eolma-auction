@@ -11,7 +11,7 @@ public record AuctionUpdateMessage(
         String status,
         Integer viewerCount,
         String bidderNickname,
-        Long buyerId,
+        String buyerId,
         String expiresAt
 ) {
 
@@ -21,11 +21,11 @@ public record AuctionUpdateMessage(
                 "ACTIVE", viewerCount, bidderNickname, null, null);
     }
 
-    public static AuctionUpdateMessage closed(Long winnerId, Long winningPrice, String status) {
+    public static AuctionUpdateMessage closed(String winnerId, Long winningPrice, String status) {
         return new AuctionUpdateMessage("AUCTION_CLOSED", winningPrice, 0, 0L, status, null, null, null, null);
     }
 
-    public static AuctionUpdateMessage instantBuyStarted(Long buyerId, String expiresAt) {
+    public static AuctionUpdateMessage instantBuyStarted(String buyerId, String expiresAt) {
         return new AuctionUpdateMessage("INSTANT_BUY_STARTED", null, null, null,
                 "PENDING_INSTANT_BUY", null, null, buyerId, expiresAt);
     }

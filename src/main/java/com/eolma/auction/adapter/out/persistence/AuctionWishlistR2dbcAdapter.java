@@ -21,22 +21,22 @@ public class AuctionWishlistR2dbcAdapter implements AuctionWishlistPort {
     }
 
     @Override
-    public Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, Long userId) {
+    public Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, String userId) {
         return repository.deleteByAuctionIdAndUserId(auctionId, userId);
     }
 
     @Override
-    public Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, Long userId) {
+    public Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, String userId) {
         return repository.findByAuctionIdAndUserId(auctionId, userId);
     }
 
     @Override
-    public Flux<AuctionWishlist> findByUserId(Long userId, int limit, long offset) {
+    public Flux<AuctionWishlist> findByUserId(String userId, int limit, long offset) {
         return repository.findByUserId(userId, limit, offset);
     }
 
     @Override
-    public Mono<Long> countByUserId(Long userId) {
+    public Mono<Long> countByUserId(String userId) {
         return repository.countByUserId(userId);
     }
 
@@ -46,7 +46,7 @@ public class AuctionWishlistR2dbcAdapter implements AuctionWishlistPort {
     }
 
     @Override
-    public Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, Long userId) {
+    public Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, String userId) {
         return repository.existsByAuctionIdAndUserId(auctionId, userId);
     }
 }

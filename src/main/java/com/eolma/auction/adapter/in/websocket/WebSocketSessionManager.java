@@ -25,13 +25,13 @@ public class WebSocketSessionManager {
     private final Map<Long, Set<WebSocketSession>> auctionSessions = new ConcurrentHashMap<>();
 
     // sessionId -> userId
-    private final Map<String, Long> sessionUserMap = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionUserMap = new ConcurrentHashMap<>();
 
     public WebSocketSessionManager(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
-    public void subscribe(Long auctionId, WebSocketSession session, Long userId) {
+    public void subscribe(Long auctionId, WebSocketSession session, String userId) {
         auctionSessions.computeIfAbsent(auctionId, k -> ConcurrentHashMap.newKeySet())
                 .add(session);
         sessionUserMap.put(session.getId(), userId);
@@ -50,7 +50,7 @@ public class WebSocketSessionManager {
         log.debug("WebSocket unsubscribed: auctionId={}, sessionId={}", auctionId, session.getId());
     }
 
-    public Long getUserId(WebSocketSession session) {
+    public String getUserId(WebSocketSession session) {
         return sessionUserMap.get(session.getId());
     }
 
@@ -63,12 +63,12 @@ public class WebSocketSessionManager {
         broadcast(auctionId, message);
     }
 
-    public void broadcastAuctionClosed(Long auctionId, Long winnerId, Long winningPrice, String status) {
+    public void broadcastAuctionClosed(Long auctionId, String winnerId, Long winningPrice, String status) {
         AuctionUpdateMessage message = AuctionUpdateMessage.closed(winnerId, winningPrice, status);
         broadcast(auctionId, message);
     }
 
-    public void broadcastInstantBuyStarted(Long auctionId, Long buyerId, java.time.LocalDateTime expiresAt) {
+    public void broadcastInstantBuyStarted(Long auctionId, String buyerId, java.time.LocalDateTime expiresAt) {
         AuctionUpdateMessage message = AuctionUpdateMessage.instantBuyStarted(buyerId, expiresAt.toString());
         broadcast(auctionId, message);
     }

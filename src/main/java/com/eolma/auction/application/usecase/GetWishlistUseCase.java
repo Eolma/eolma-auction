@@ -22,11 +22,11 @@ public class GetWishlistUseCase {
         this.auctionService = auctionService;
     }
 
-    public Mono<Boolean> isWishlisted(Long auctionId, Long userId) {
+    public Mono<Boolean> isWishlisted(Long auctionId, String userId) {
         return wishlistPort.existsByAuctionIdAndUserId(auctionId, userId);
     }
 
-    public Mono<PageResponse<AuctionListResponse>> getMyWishlist(Long userId, int page, int size) {
+    public Mono<PageResponse<AuctionListResponse>> getMyWishlist(String userId, int page, int size) {
         long offset = (long) page * size;
 
         return wishlistPort.findByUserId(userId, size, offset)

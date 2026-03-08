@@ -21,7 +21,7 @@ public class AuctionService {
         this.auctionRepository = auctionRepository;
     }
 
-    public Mono<Auction> createAuction(Long productId, Long sellerId, String title,
+    public Mono<Auction> createAuction(Long productId, String sellerId, String title,
                                         Long startingPrice, Long instantPrice, Long reservePrice,
                                         Long minBidUnit, String endType,
                                         Integer durationHours, Integer maxBidCount) {
@@ -40,7 +40,7 @@ public class AuctionService {
                         "Auction not found: " + auctionId)));
     }
 
-    public Mono<Auction> completeAuction(Long auctionId, Long winnerId, Long winningPrice) {
+    public Mono<Auction> completeAuction(Long auctionId, String winnerId, Long winningPrice) {
         return findById(auctionId)
                 .flatMap(auction -> {
                     auction.setAuctionStatus(AuctionStatus.COMPLETED);

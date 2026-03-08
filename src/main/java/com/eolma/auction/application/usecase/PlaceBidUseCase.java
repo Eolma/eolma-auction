@@ -58,7 +58,7 @@ public class PlaceBidUseCase {
         this.userServiceClient = userServiceClient;
     }
 
-    public Mono<BidResult> execute(Long auctionId, Long bidderId, Long amount) {
+    public Mono<BidResult> execute(Long auctionId, String bidderId, Long amount) {
         log.info("Processing bid: auctionId={}, bidderId={}, amount={}", auctionId, bidderId, amount);
 
         return Mono.fromCallable(() ->
@@ -68,16 +68,16 @@ public class PlaceBidUseCase {
         ).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Mono<BidResult> processBidWithLock(Long auctionId, Long bidderId, Long amount) {
+    private Mono<BidResult> processBidWithLock(Long auctionId, String bidderId, Long amount) {
         return auctionCachePort.getAuctionState(auctionId)
                 .flatMap(state -> {
                     if (state.isEmpty()) {
                         return auctionService.findById(auctionId)
                                 .map(auction -> Map.of(
                                         "currentPrice", String.valueOf(auction.getCurrentPrice()),
-                                        "winnerId", auction.getWinnerId() != null ? String.valueOf(auction.getWinnerId()) : "0",
+                                        "winnerId", auction.getWinnerId() != null ? auction.getWinnerId() : "0",
                                         "bidCount", String.valueOf(auction.getBidCount()),
-                                        "sellerId", String.valueOf(auction.getSellerId()),
+                                        "sellerId", auction.getSellerId(),
                                         "minBidUnit", String.valueOf(auction.getMinBidUnit()),
                                         "status", auction.getStatus(),
                                         "instantPrice", auction.getInstantPrice() != null ? String.valueOf(auction.getInstantPrice()) : "0",
@@ -103,17 +103,17 @@ public class PlaceBidUseCase {
                 .flatMap(state -> validateAndPlaceBid(auctionId, bidderId, amount, state));
     }
 
-    private Mono<BidResult> validateAndPlaceBid(Long auctionId, Long bidderId, Long amount, Map<String, String> state) {
+    private Mono<BidResult> validateAndPlaceBid(Long auctionId, String bidderId, Long amount, Map<String, String> state) {
         Long currentPrice = Long.parseLong(state.getOrDefault("currentPrice", "0"));
-        Long winnerId = Long.parseLong(state.getOrDefault("winnerId", "0"));
-        Long sellerId = Long.parseLong(state.getOrDefault("sellerId", "0"));
+        String winnerId = state.getOrDefault("winnerId", "0");
+        String sellerId = state.getOrDefault("sellerId", "");
         Long minBidUnit = Long.parseLong(state.getOrDefault("minBidUnit", "1000"));
         String status = state.getOrDefault("status", "ACTIVE");
         Long instantPrice = Long.parseLong(state.getOrDefault("instantPrice", "0"));
         int bidCount = Integer.parseInt(state.getOrDefault("bidCount", "0"));
 
         BidResult validationResult = bidValidationService.validate(
-                bidderId, sellerId, amount, currentPrice, minBidUnit, status, winnerId == 0 ? null : winnerId);
+                bidderId, sellerId, amount, currentPrice, minBidUnit, status, "0".equals(winnerId) ? null : winnerId);
 
         if (validationResult != null) {
             return Mono.just(validationResult);

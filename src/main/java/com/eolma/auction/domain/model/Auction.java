@@ -20,7 +20,7 @@ public class Auction {
     private Long productId;
 
     @Column("seller_id")
-    private Long sellerId;
+    private String sellerId;
 
     private String title;
 
@@ -57,7 +57,7 @@ public class Auction {
     private LocalDateTime endAt;
 
     @Column("winner_id")
-    private Long winnerId;
+    private String winnerId;
 
     @Column("winning_price")
     private Long winningPrice;
@@ -100,7 +100,7 @@ public class Auction {
         return reservePrice != null && reservePrice > 0;
     }
 
-    public static Auction create(Long productId, Long sellerId, String title,
+    public static Auction create(Long productId, String sellerId, String title,
                                   Long startingPrice, Long instantPrice, Long reservePrice,
                                   Long minBidUnit, AuctionEndType endType,
                                   Integer durationHours, Integer maxBidCount) {

@@ -11,9 +11,9 @@ public class BidValidationService {
 
     private static final Logger log = LoggerFactory.getLogger(BidValidationService.class);
 
-    public BidResult validate(Long bidderId, Long sellerId, Long bidAmount,
+    public BidResult validate(String bidderId, String sellerId, Long bidAmount,
                                Long currentPrice, Long minBidUnit, String status,
-                               Long currentWinnerId) {
+                               String currentWinnerId) {
 
         if (AuctionStatus.PENDING_INSTANT_BUY.name().equals(status)) {
             log.warn("Bid rejected: instant buy in progress, status={}", status);

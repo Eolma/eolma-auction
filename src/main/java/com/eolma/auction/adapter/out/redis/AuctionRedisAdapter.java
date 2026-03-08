@@ -28,7 +28,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
     }
 
     @Override
-    public Mono<Void> initAuctionCache(Long auctionId, Long sellerId, Long currentPrice,
+    public Mono<Void> initAuctionCache(Long auctionId, String sellerId, Long currentPrice,
                                         Long minBidUnit, Long instantPrice, LocalDateTime endAt) {
         String key = auctionCurrentKey(auctionId);
         Map<String, String> fields = new HashMap<>();
@@ -36,7 +36,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
         fields.put("winnerId", "0");
         fields.put("bidCount", "0");
         fields.put("status", "ACTIVE");
-        fields.put("sellerId", String.valueOf(sellerId));
+        fields.put("sellerId", sellerId);
         fields.put("minBidUnit", String.valueOf(minBidUnit));
         fields.put("instantPrice", instantPrice != null ? String.valueOf(instantPrice) : "0");
         fields.put("endAt", endAt.toString());
@@ -59,21 +59,21 @@ public class AuctionRedisAdapter implements AuctionCachePort {
     }
 
     @Override
-    public Mono<Void> updateBidState(Long auctionId, Long currentPrice, Long winnerId, int bidCount) {
+    public Mono<Void> updateBidState(Long auctionId, Long currentPrice, String winnerId, int bidCount) {
         String key = auctionCurrentKey(auctionId);
         Map<String, String> fields = new HashMap<>();
         fields.put("currentPrice", String.valueOf(currentPrice));
-        fields.put("winnerId", String.valueOf(winnerId));
+        fields.put("winnerId", winnerId);
         fields.put("bidCount", String.valueOf(bidCount));
 
         return redisTemplate.opsForHash().putAll(key, fields).then();
     }
 
     @Override
-    public Mono<Void> addBidToRanking(Long auctionId, Long bidderId, Long amount) {
+    public Mono<Void> addBidToRanking(Long auctionId, String bidderId, Long amount) {
         String key = auctionBidsKey(auctionId);
         return redisTemplate.opsForZSet()
-                .add(key, String.valueOf(bidderId), amount.doubleValue())
+                .add(key, bidderId, amount.doubleValue())
                 .then(redisTemplate.expire(key, CACHE_TTL))
                 .then();
     }
@@ -116,10 +116,10 @@ public class AuctionRedisAdapter implements AuctionCachePort {
     }
 
     @Override
-    public Mono<Boolean> setInstantBuyReservation(Long auctionId, Long buyerId) {
+    public Mono<Boolean> setInstantBuyReservation(Long auctionId, String buyerId) {
         String key = instantBuyKey(auctionId);
         Map<String, String> fields = new HashMap<>();
-        fields.put("buyerId", String.valueOf(buyerId));
+        fields.put("buyerId", buyerId);
         fields.put("startedAt", LocalDateTime.now().toString());
 
         return redisTemplate.opsForHash().putAll(key, fields)

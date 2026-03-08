@@ -40,7 +40,7 @@ public class BidWebSocketHandler implements WebSocketHandler {
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         Long auctionId = extractAuctionId(session);
-        Long userId = extractUserId(session);
+        String userId = extractUserId(session);
 
         if (auctionId == null) {
             log.warn("Invalid WebSocket connection: missing auctionId");
@@ -58,7 +58,7 @@ public class BidWebSocketHandler implements WebSocketHandler {
                 .then();
     }
 
-    private void handleMessage(WebSocketSession session, Long auctionId, Long userId, String payload) {
+    private void handleMessage(WebSocketSession session, Long auctionId, String userId, String payload) {
         try {
             BidMessage bidMessage = objectMapper.readValue(payload, BidMessage.class);
 
@@ -101,7 +101,7 @@ public class BidWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    private void handleInstantBuyReservation(WebSocketSession session, Long auctionId, Long userId) {
+    private void handleInstantBuyReservation(WebSocketSession session, Long auctionId, String userId) {
         instantBuyUseCase.execute(auctionId, userId)
                 .subscribe(
                         ibResult -> {
@@ -141,28 +141,21 @@ public class BidWebSocketHandler implements WebSocketHandler {
         }
     }
 
-    private Long extractUserId(WebSocketSession session) {
+    private String extractUserId(WebSocketSession session) {
         String userIdHeader = session.getHandshakeInfo().getHeaders().getFirst("X-User-Id");
-        if (userIdHeader == null) {
+        if (userIdHeader == null || userIdHeader.isBlank()) {
             String query = session.getHandshakeInfo().getUri().getQuery();
             if (query != null && query.contains("userId=")) {
                 String[] params = query.split("&");
                 for (String param : params) {
                     if (param.startsWith("userId=")) {
-                        try {
-                            return Long.parseLong(param.substring(7));
-                        } catch (NumberFormatException e) {
-                            return null;
-                        }
+                        String value = param.substring(7);
+                        return value.isBlank() ? null : value;
                     }
                 }
             }
             return null;
         }
-        try {
-            return Long.parseLong(userIdHeader);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return userIdHeader;
     }
 }

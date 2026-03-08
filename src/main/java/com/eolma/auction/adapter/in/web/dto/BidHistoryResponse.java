@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record BidHistoryResponse(
         Long id,
-        Long bidderId,
+        String bidderId,
         Long amount,
         String bidType,
         LocalDateTime createdAt

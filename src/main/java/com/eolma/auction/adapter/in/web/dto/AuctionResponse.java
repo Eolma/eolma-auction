@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public record AuctionResponse(
         Long id,
         Long productId,
-        Long sellerId,
+        String sellerId,
         String title,
         Long startingPrice,
         Long instantPrice,
@@ -16,7 +16,7 @@ public record AuctionResponse(
         String status,
         LocalDateTime endAt,
         long remainingSeconds,
-        Long winnerId,
+        String winnerId,
         Long winningPrice,
         LocalDateTime createdAt,
         Boolean isWishlisted

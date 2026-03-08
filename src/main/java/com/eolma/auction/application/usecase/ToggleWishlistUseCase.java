@@ -14,7 +14,7 @@ public class ToggleWishlistUseCase {
         this.wishlistPort = wishlistPort;
     }
 
-    public Mono<Boolean> execute(Long auctionId, Long userId) {
+    public Mono<Boolean> execute(Long auctionId, String userId) {
         return wishlistPort.findByAuctionIdAndUserId(auctionId, userId)
                 .flatMap(existing ->
                         wishlistPort.deleteByAuctionIdAndUserId(auctionId, userId)

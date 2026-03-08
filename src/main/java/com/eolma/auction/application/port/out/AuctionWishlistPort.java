@@ -8,15 +8,15 @@ public interface AuctionWishlistPort {
 
     Mono<AuctionWishlist> save(AuctionWishlist wishlist);
 
-    Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, String userId);
 
-    Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, String userId);
 
-    Flux<AuctionWishlist> findByUserId(Long userId, int limit, long offset);
+    Flux<AuctionWishlist> findByUserId(String userId, int limit, long offset);
 
-    Mono<Long> countByUserId(Long userId);
+    Mono<Long> countByUserId(String userId);
 
     Mono<Long> countByAuctionId(Long auctionId);
 
-    Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, String userId);
 }

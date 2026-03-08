@@ -19,7 +19,7 @@ public class UserServiceClient {
                 .build();
     }
 
-    public Mono<String> getNickname(Long userId) {
+    public Mono<String> getNickname(String userId) {
         return webClient.get()
                 .uri("/api/v1/members/{id}", userId)
                 .retrieve()
@@ -31,5 +31,5 @@ public class UserServiceClient {
                 });
     }
 
-    private record MemberResponse(Long id, String nickname, String profileImageUrl) {}
+    private record MemberResponse(String id, String nickname, String profileImageUrl) {}
 }

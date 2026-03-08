@@ -38,7 +38,7 @@ public class GetAuctionUseCase {
         this.wishlistPort = wishlistPort;
     }
 
-    public Mono<AuctionResponse> getAuction(Long auctionId, Long userId) {
+    public Mono<AuctionResponse> getAuction(Long auctionId, String userId) {
         return auctionService.findById(auctionId)
                 .flatMap(auction ->
                         auctionCachePort.getAuctionState(auctionId)
@@ -82,7 +82,7 @@ public class GetAuctionUseCase {
                 });
     }
 
-    public Mono<PageResponse<AuctionListResponse>> getMyAuctions(Long bidderId, int page, int size) {
+    public Mono<PageResponse<AuctionListResponse>> getMyAuctions(String bidderId, int page, int size) {
         long offset = (long) page * size;
 
         return auctionRepository.findByBidderId(bidderId, size, offset)

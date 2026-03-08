@@ -28,7 +28,7 @@ public class CompleteInstantBuyUseCase {
         this.closeAuctionUseCase = closeAuctionUseCase;
     }
 
-    public Mono<Void> execute(Long auctionId, Long buyerId, Long amount) {
+    public Mono<Void> execute(Long auctionId, String buyerId, Long amount) {
         log.info("Completing instant buy: auctionId={}, buyerId={}, amount={}", auctionId, buyerId, amount);
 
         return Mono.fromCallable(() -> {
@@ -40,7 +40,7 @@ public class CompleteInstantBuyUseCase {
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }
 
-    private Mono<Void> completeInstantBuy(Long auctionId, Long buyerId, Long amount) {
+    private Mono<Void> completeInstantBuy(Long auctionId, String buyerId, Long amount) {
         return auctionCachePort.getInstantBuyReservation(auctionId)
                 .flatMap(reservation -> {
                     if (reservation.isEmpty()) {

@@ -69,11 +69,11 @@ public class CloseAuctionUseCase {
                                 return Mono.empty();
                             }
 
-                            Long winnerId = parseOrNull(state.get("winnerId"));
+                            String winnerId = parseWinnerId(state.get("winnerId"));
                             Long currentPrice = parseLong(state.getOrDefault("currentPrice", "0"));
                             int bidCount = Integer.parseInt(state.getOrDefault("bidCount", "0"));
 
-                            boolean hasValidWinner = winnerId != null && winnerId > 0;
+                            boolean hasValidWinner = winnerId != null;
                             boolean meetsReservePrice = !auction.hasReservePrice()
                                     || currentPrice >= auction.getReservePrice();
 
@@ -86,7 +86,7 @@ public class CloseAuctionUseCase {
                 );
     }
 
-    private Mono<Void> completeAuction(Auction auction, Long winnerId, Long winningPrice, int bidCount) {
+    private Mono<Void> completeAuction(Auction auction, String winnerId, Long winningPrice, int bidCount) {
         return auctionService.completeAuction(auction.getId(), winnerId, winningPrice)
                 .flatMap(completed -> {
                     publishCompletedEvent(completed, bidCount);
@@ -133,9 +133,9 @@ public class CloseAuctionUseCase {
         ));
     }
 
-    private Long parseOrNull(String value) {
+    private String parseWinnerId(String value) {
         if (value == null || value.isEmpty() || "0".equals(value)) return null;
-        return Long.parseLong(value);
+        return value;
     }
 
     private Long parseLong(String value) {

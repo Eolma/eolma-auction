@@ -25,7 +25,7 @@ public class AuctionWishlistController {
     @PostMapping("/{id}/wishlist")
     public Mono<Map<String, Boolean>> toggleWishlist(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId) {
+            @RequestHeader("X-User-Id") String userId) {
         return toggleWishlistUseCase.execute(id, userId)
                 .map(wishlisted -> Map.of("wishlisted", wishlisted));
     }
@@ -33,14 +33,14 @@ public class AuctionWishlistController {
     @GetMapping("/{id}/wishlist")
     public Mono<Map<String, Boolean>> isWishlisted(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long userId) {
+            @RequestHeader("X-User-Id") String userId) {
         return getWishlistUseCase.isWishlisted(id, userId)
                 .map(wishlisted -> Map.of("wishlisted", wishlisted));
     }
 
     @GetMapping("/wishlist/me")
     public Mono<PageResponse<AuctionListResponse>> getMyWishlist(
-            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return getWishlistUseCase.getMyWishlist(userId, page, size);

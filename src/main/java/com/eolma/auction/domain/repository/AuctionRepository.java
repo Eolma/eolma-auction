@@ -41,12 +41,12 @@ public interface AuctionRepository extends ReactiveCrudRepository<Auction, Long>
             ORDER BY MAX(b.created_at) DESC
             LIMIT :limit OFFSET :offset
             """)
-    Flux<Auction> findByBidderId(Long bidderId, int limit, long offset);
+    Flux<Auction> findByBidderId(String bidderId, int limit, long offset);
 
     @Query("""
             SELECT COUNT(DISTINCT a.id) FROM auction a
             INNER JOIN bid b ON a.id = b.auction_id
             WHERE b.bidder_id = :bidderId
             """)
-    Mono<Long> countByBidderId(Long bidderId);
+    Mono<Long> countByBidderId(String bidderId);
 }

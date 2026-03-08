@@ -31,7 +31,7 @@ public class CancelInstantBuyUseCase {
         this.sessionManager = sessionManager;
     }
 
-    public Mono<Void> execute(Long auctionId, Long userId) {
+    public Mono<Void> execute(Long auctionId, String userId) {
         log.info("Cancelling instant buy reservation: auctionId={}, userId={}", auctionId, userId);
 
         return Mono.fromCallable(() -> {
@@ -50,7 +50,7 @@ public class CancelInstantBuyUseCase {
         return restoreAuction(auctionId);
     }
 
-    private Mono<Void> cancelReservation(Long auctionId, Long userId) {
+    private Mono<Void> cancelReservation(Long auctionId, String userId) {
         return auctionCachePort.getInstantBuyReservation(auctionId)
                 .flatMap(reservation -> {
                     if (reservation.isEmpty()) {
@@ -59,7 +59,7 @@ public class CancelInstantBuyUseCase {
                         return restoreAuction(auctionId);
                     }
                     String reservedBuyerId = reservation.get("buyerId");
-                    if (userId != null && !String.valueOf(userId).equals(reservedBuyerId)) {
+                    if (userId != null && !userId.equals(reservedBuyerId)) {
                         log.warn("Cancel rejected: userId={} is not the reservation holder", userId);
                         return Mono.empty();
                     }

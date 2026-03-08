@@ -8,16 +8,16 @@ import reactor.core.publisher.Mono;
 
 public interface AuctionWishlistRepository extends ReactiveCrudRepository<AuctionWishlist, Long> {
 
-    Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<AuctionWishlist> findByAuctionIdAndUserId(Long auctionId, String userId);
 
-    Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<Void> deleteByAuctionIdAndUserId(Long auctionId, String userId);
 
     @Query("SELECT * FROM auction_wishlist WHERE user_id = :userId ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
-    Flux<AuctionWishlist> findByUserId(Long userId, int limit, long offset);
+    Flux<AuctionWishlist> findByUserId(String userId, int limit, long offset);
 
-    Mono<Long> countByUserId(Long userId);
+    Mono<Long> countByUserId(String userId);
 
     Mono<Long> countByAuctionId(Long auctionId);
 
-    Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, Long userId);
+    Mono<Boolean> existsByAuctionIdAndUserId(Long auctionId, String userId);
 }
