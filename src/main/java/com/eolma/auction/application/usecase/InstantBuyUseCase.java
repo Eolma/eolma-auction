@@ -1,5 +1,6 @@
 package com.eolma.auction.application.usecase;
 
+import com.eolma.auction.adapter.in.websocket.WebSocketSessionManager;
 import com.eolma.auction.application.port.out.AuctionCachePort;
 import com.eolma.auction.application.port.out.DistributedLockPort;
 import com.eolma.auction.application.port.out.EventPublisher;
@@ -29,17 +30,20 @@ public class InstantBuyUseCase {
     private final DistributedLockPort distributedLockPort;
     private final EventPublisher eventPublisher;
     private final BidValidationService bidValidationService;
+    private final WebSocketSessionManager sessionManager;
 
     public InstantBuyUseCase(AuctionService auctionService,
                               AuctionCachePort auctionCachePort,
                               DistributedLockPort distributedLockPort,
                               EventPublisher eventPublisher,
-                              BidValidationService bidValidationService) {
+                              BidValidationService bidValidationService,
+                              WebSocketSessionManager sessionManager) {
         this.auctionService = auctionService;
         this.auctionCachePort = auctionCachePort;
         this.distributedLockPort = distributedLockPort;
         this.eventPublisher = eventPublisher;
         this.bidValidationService = bidValidationService;
+        this.sessionManager = sessionManager;
     }
 
     public Mono<InstantBuyResult> execute(Long auctionId, String buyerId) {
@@ -96,6 +100,7 @@ public class InstantBuyUseCase {
                 .flatMap(auction -> {
                     publishInstantBuyStartedEvent(auction.getId(), auction.getProductId(),
                             auction.getSellerId(), buyerId, instantPrice, expiresAt);
+                    sessionManager.broadcastInstantBuyStarted(auctionId, buyerId, expiresAt);
                     return Mono.just(InstantBuyResult.success(auctionId, instantPrice, expiresAt));
                 });
     }

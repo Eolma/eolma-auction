@@ -113,9 +113,7 @@ public class BidWebSocketHandler implements WebSocketHandler {
                                         "price", ibResult.price(),
                                         "expiresAt", ibResult.expiresAt().toString()
                                 ));
-                                // 전체 참여자에게 선점 상태 브로드캐스트
-                                sessionManager.broadcastInstantBuyStarted(
-                                        auctionId, userId, ibResult.expiresAt());
+                                // broadcast는 InstantBuyUseCase 내부에서 처리
                             } else {
                                 sessionManager.sendToSession(session,
                                         BidResultMessage.failure(ibResult.errorCode(), ibResult.errorMessage()));

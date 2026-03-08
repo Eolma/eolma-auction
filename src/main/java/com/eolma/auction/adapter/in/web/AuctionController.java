@@ -5,7 +5,9 @@ import com.eolma.auction.adapter.in.web.dto.AuctionResponse;
 import com.eolma.auction.adapter.in.web.dto.BidHistoryResponse;
 import com.eolma.auction.application.usecase.CancelInstantBuyUseCase;
 import com.eolma.auction.application.usecase.GetAuctionUseCase;
+import com.eolma.auction.application.usecase.InstantBuyUseCase;
 import com.eolma.common.dto.PageResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -14,11 +16,14 @@ import reactor.core.publisher.Mono;
 public class AuctionController {
 
     private final GetAuctionUseCase getAuctionUseCase;
+    private final InstantBuyUseCase instantBuyUseCase;
     private final CancelInstantBuyUseCase cancelInstantBuyUseCase;
 
     public AuctionController(GetAuctionUseCase getAuctionUseCase,
+                              InstantBuyUseCase instantBuyUseCase,
                               CancelInstantBuyUseCase cancelInstantBuyUseCase) {
         this.getAuctionUseCase = getAuctionUseCase;
+        this.instantBuyUseCase = instantBuyUseCase;
         this.cancelInstantBuyUseCase = cancelInstantBuyUseCase;
     }
 
@@ -52,6 +57,19 @@ public class AuctionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return getAuctionUseCase.getBidHistory(id, page, size);
+    }
+
+    @PostMapping("/{id}/instant-buy")
+    public Mono<ResponseEntity<InstantBuyUseCase.InstantBuyResult>> instantBuy(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") String userId) {
+        return instantBuyUseCase.execute(id, userId)
+                .map(result -> {
+                    if (result.accepted()) {
+                        return ResponseEntity.ok(result);
+                    }
+                    return ResponseEntity.badRequest().body(result);
+                });
     }
 
     @PostMapping("/{id}/instant-buy/cancel")
