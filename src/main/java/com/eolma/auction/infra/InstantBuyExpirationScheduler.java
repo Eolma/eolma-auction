@@ -25,7 +25,7 @@ public class InstantBuyExpirationScheduler {
         this.cancelInstantBuyUseCase = cancelInstantBuyUseCase;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 5000)
     public void checkExpiredReservations() {
         auctionRepository.findByStatus(AuctionStatus.PENDING_INSTANT_BUY.name())
                 .flatMap(auction ->

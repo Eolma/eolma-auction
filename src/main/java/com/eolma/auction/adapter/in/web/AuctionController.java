@@ -3,6 +3,7 @@ package com.eolma.auction.adapter.in.web;
 import com.eolma.auction.adapter.in.web.dto.AuctionListResponse;
 import com.eolma.auction.adapter.in.web.dto.AuctionResponse;
 import com.eolma.auction.adapter.in.web.dto.BidHistoryResponse;
+import com.eolma.auction.application.port.out.AuctionCachePort;
 import com.eolma.auction.application.usecase.CancelInstantBuyUseCase;
 import com.eolma.auction.application.usecase.GetAuctionUseCase;
 import com.eolma.auction.application.usecase.InstantBuyUseCase;
@@ -18,13 +19,16 @@ public class AuctionController {
     private final GetAuctionUseCase getAuctionUseCase;
     private final InstantBuyUseCase instantBuyUseCase;
     private final CancelInstantBuyUseCase cancelInstantBuyUseCase;
+    private final AuctionCachePort auctionCachePort;
 
     public AuctionController(GetAuctionUseCase getAuctionUseCase,
                               InstantBuyUseCase instantBuyUseCase,
-                              CancelInstantBuyUseCase cancelInstantBuyUseCase) {
+                              CancelInstantBuyUseCase cancelInstantBuyUseCase,
+                              AuctionCachePort auctionCachePort) {
         this.getAuctionUseCase = getAuctionUseCase;
         this.instantBuyUseCase = instantBuyUseCase;
         this.cancelInstantBuyUseCase = cancelInstantBuyUseCase;
+        this.auctionCachePort = auctionCachePort;
     }
 
     @GetMapping
@@ -77,5 +81,15 @@ public class AuctionController {
             @PathVariable Long id,
             @RequestHeader("X-User-Id") String userId) {
         return cancelInstantBuyUseCase.execute(id, userId);
+    }
+
+    @PostMapping("/{id}/instant-buy/heartbeat")
+    public Mono<ResponseEntity<Void>> heartbeat(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") String userId) {
+        return auctionCachePort.refreshInstantBuyReservation(id, userId)
+                .map(refreshed -> refreshed
+                        ? ResponseEntity.ok().<Void>build()
+                        : ResponseEntity.status(410).<Void>build());
     }
 }

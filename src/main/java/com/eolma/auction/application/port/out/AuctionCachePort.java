@@ -30,4 +30,6 @@ public interface AuctionCachePort {
     Mono<Map<String, String>> getInstantBuyReservation(Long auctionId);
 
     Mono<Void> removeInstantBuyReservation(Long auctionId);
+
+    Mono<Boolean> refreshInstantBuyReservation(Long auctionId, String buyerId);
 }

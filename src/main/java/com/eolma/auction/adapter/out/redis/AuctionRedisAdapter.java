@@ -18,7 +18,7 @@ public class AuctionRedisAdapter implements AuctionCachePort {
 
     private static final Logger log = LoggerFactory.getLogger(AuctionRedisAdapter.class);
     private static final Duration CACHE_TTL = Duration.ofHours(25);
-    private static final Duration INSTANT_BUY_TTL = Duration.ofMinutes(5);
+    private static final Duration INSTANT_BUY_TTL = Duration.ofSeconds(30);
     private static final String ENDING_KEY = "auction:ending";
 
     private final ReactiveStringRedisTemplate redisTemplate;
@@ -139,6 +139,25 @@ public class AuctionRedisAdapter implements AuctionCachePort {
                         entry -> entry.getValue().toString()
                 )
                 .defaultIfEmpty(new HashMap<>());
+    }
+
+    @Override
+    public Mono<Boolean> refreshInstantBuyReservation(Long auctionId, String buyerId) {
+        String key = instantBuyKey(auctionId);
+        return redisTemplate.opsForHash().get(key, "buyerId")
+                .flatMap(stored -> {
+                    if (!buyerId.equals(stored.toString())) {
+                        return Mono.just(false);
+                    }
+                    return redisTemplate.expire(key, INSTANT_BUY_TTL)
+                            .thenReturn(true);
+                })
+                .defaultIfEmpty(false)
+                .doOnSuccess(result -> {
+                    if (result) {
+                        log.debug("Instant buy reservation refreshed: auctionId={}, buyerId={}", auctionId, buyerId);
+                    }
+                });
     }
 
     @Override
